@@ -37,21 +37,21 @@ Each major section follows a consistent template:
 
 | # | Section | Description |
 |---|---------|-------------|
-| 03 | [Identity & Federation](03-Identity-and-Federation.md) | IAM, Organizations, STS, Identity Center, Cognito, ABAC, SCPs |
-| 04 | [Security](04-Security.md) | KMS, WAF, Shield, GuardDuty, CloudTrail, Config, encryption |
-| 05 | [Compute & Load Balancing](05-Compute-and-Load-Balancing.md) | EC2, Lambda, ECS, EKS, ALB, NLB, Auto Scaling |
-| 06 | [Storage](06-Storage.md) | S3, EBS, EFS, FSx, Storage Gateway, lifecycle, tiers |
-| 07 | [Caching](07-Caching.md) | CloudFront, ElastiCache, Global Accelerator, edge compute |
-| 08 | [Databases](08-Databases.md) | RDS, Aurora, DynamoDB, DAX, Redshift |
-| 09 | [Service Communication](09-Service-Communication.md) | SQS, SNS, EventBridge, Step Functions, API Gateway |
-| 10 | [Data Engineering](10-Data-Engineering.md) | Kinesis, Glue, EMR, Athena, Redshift, data lakes |
-| 11 | [Monitoring & Observability](11-Monitoring-and-Observability.md) | CloudWatch, X-Ray, CloudTrail, Config |
-| 12 | [Deployment & Instance Management](12-Deployment-and-Instance-Management.md) | Systems Manager, CloudFormation, CodeDeploy |
-| 13 | [Cost Control](13-Cost-Control.md) | Cost Explorer, Savings Plans, Spot, tagging, optimization |
-| 14 | [Migration](14-Migration.md) | MGN, DMS, DataSync, Backup, DRS, 7 R's strategy |
-| 15 | [VPC & Networking](15-VPC-and-Networking.md) | VPC, subnets, routing, Security Groups, NACLs, TGW, DX |
-| 16 | [Machine Learning](16-Machine-Learning.md) | SageMaker, Bedrock, Rekognition, Comprehend |
-| 17 | [Other Services](17-Other-Services.md) | WorkSpaces, IoT, Amplify, AppSync, Connect |
+| 03 | [Identity & Federation](sections/03-Identity-and-Federation.md) | IAM, Organizations, STS, Identity Center, Cognito, ABAC, SCPs |
+| 04 | [Security](sections/04-Security.md) | KMS, WAF, Shield, GuardDuty, CloudTrail, Config, encryption |
+| 05 | [Compute & Load Balancing](sections/05-Compute-and-Load-Balancing.md) | EC2, Lambda, ECS, EKS, ALB, NLB, Auto Scaling |
+| 06 | [Storage](sections/06-Storage.md) | S3, EBS, EFS, FSx, Storage Gateway, lifecycle, tiers |
+| 07 | [Caching](sections/07-Caching.md) | CloudFront, ElastiCache, Global Accelerator, edge compute |
+| 08 | [Databases](sections/08-Databases.md) | RDS, Aurora, DynamoDB, DAX, Redshift |
+| 09 | [Service Communication](sections/09-Service-Communication.md) | SQS, SNS, EventBridge, Step Functions, API Gateway |
+| 10 | [Data Engineering](sections/10-Data-Engineering.md) | Kinesis, Glue, EMR, Athena, Redshift, data lakes |
+| 11 | [Monitoring & Observability](sections/11-Monitoring-and-Observability.md) | CloudWatch, X-Ray, CloudTrail, Config |
+| 12 | [Deployment & Instance Management](sections/12-Deployment-and-Instance-Management.md) | Systems Manager, CloudFormation, CodeDeploy |
+| 13 | [Cost Control](sections/13-Cost-Control.md) | Cost Explorer, Savings Plans, Spot, tagging, optimization |
+| 14 | [Migration](sections/14-Migration.md) | MGN, DMS, DataSync, Backup, DRS, 7 R's strategy |
+| 15 | [VPC & Networking](sections/15-VPC-and-Networking.md) | VPC, subnets, routing, Security Groups, NACLs, TGW, DX |
+| 16 | [Machine Learning](sections/16-Machine-Learning.md) | SageMaker, Bedrock, Rekognition, Comprehend |
+| 17 | [Other Services](sections/17-Other-Services.md) | WorkSpaces, IoT, Amplify, AppSync, Connect |
 
 ## Cross-Service Patterns
 
