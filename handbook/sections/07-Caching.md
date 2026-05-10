@@ -300,4 +300,13 @@ Memcached is only appropriate if sessions are truly ephemeral (e.g., anonymous p
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **CloudFront distributions, OAC, Global Accelerator**: [`CloudFront-GlobalAccelerator.md`](../../original-notes/CloudFront-GlobalAccelerator.md)
+- **ElastiCache Redis/Memcached, caching patterns**: [`RDS-Aurora-ElastiCache.md`](../../original-notes/RDS-Aurora-ElastiCache.md)
+
+---
+
 *Section 07 — Caching | Last Validated: 2026-05-10*

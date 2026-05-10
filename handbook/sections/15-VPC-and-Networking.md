@@ -460,4 +460,14 @@ Security group rules are necessary but not sufficient. Routing, IP assignment, a
 
 ---
 
+## 9. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **VPC deep dive, subnets, NAT, NACLs, peering, VPN, DX, Transit Gateway**: [`VPC-Networking-DeepDive.md`](../../original-notes/VPC-Networking-DeepDive.md)
+- **Route53 DNS, routing policies, health checks**: [`Route53-DNS-RoutingPolicies.md`](../../original-notes/Route53-DNS-RoutingPolicies.md)
+- **Advanced VPC (SAP level)**: [`SAP-15-VPC.md`](../../original-notes/SAP-15-VPC.md)
+
+---
+
 *Section 15 — VPC & Networking | Last Validated: 2026-05-10*

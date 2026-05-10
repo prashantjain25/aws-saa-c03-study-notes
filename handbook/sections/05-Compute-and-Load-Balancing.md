@@ -525,4 +525,16 @@ Exception: If the team already has Kubernetes expertise, EKS is reasonable. But 
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **EC2 fundamentals, instance types, security groups**: [`EC2-Basics-InstanceTypes-SecurityGroups.md`](../../original-notes/EC2-Basics-InstanceTypes-SecurityGroups.md)
+- **Placement groups, ENI, hibernate**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../original-notes/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
+- **ELB, ASG, HA, scalability patterns**: [`HA-Scalability-ELB-ASG.md`](../../original-notes/HA-Scalability-ELB-ASG.md)
+- **Lambda, concurrency, cold starts, RDS Proxy**: [`Serverless-Lambda-EdgeFunctions.md`](../../original-notes/Serverless-Lambda-EdgeFunctions.md)
+- **ECS, EKS, Fargate, ECR, container orchestration**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../original-notes/Containers-ECS-EKS-ECR-Fargate.md)
+
+---
+
 *Section 05 — Compute & Load Balancing | Last Validated: 2026-05-10*

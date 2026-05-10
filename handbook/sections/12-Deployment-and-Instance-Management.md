@@ -161,4 +161,13 @@ Alternative: ALB weighted target groups for canary deployment (gradual traffic s
 
 ---
 
+## 8. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **EC2 placement groups, ENI, hibernate, instance management**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../original-notes/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
+- **ECS, EKS, container deployment patterns**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../original-notes/Containers-ECS-EKS-ECR-Fargate.md)
+
+---
+
 *Section 12 — Deployment & Instance Management | Last Validated: 2026-05-10*

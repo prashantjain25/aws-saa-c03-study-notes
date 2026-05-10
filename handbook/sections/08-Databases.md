@@ -378,4 +378,13 @@ Reasons to choose RDS PostgreSQL:
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **RDS, Aurora, ElastiCache**: [`RDS-Aurora-ElastiCache.md`](../../original-notes/RDS-Aurora-ElastiCache.md)
+- **DynamoDB, API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../original-notes/DynamoDB-APIGateway-Serverless.md)
+
+---
+
 *Section 08 — Databases | Last Validated: 2026-05-10*

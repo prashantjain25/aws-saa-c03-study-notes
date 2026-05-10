@@ -366,4 +366,13 @@ SNS when you need:
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **SQS, SNS, Kinesis, Amazon MQ**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../original-notes/Integration-Messaging-SQS-SNS-Kinesis.md)
+- **API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../original-notes/DynamoDB-APIGateway-Serverless.md)
+
+---
+
 *Section 09 — Service Communication | Last Validated: 2026-05-10*

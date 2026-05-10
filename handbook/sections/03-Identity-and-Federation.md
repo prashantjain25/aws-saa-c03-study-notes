@@ -514,4 +514,14 @@ Trust policy restricts to vendor account + ExternalId. Identity policy restricts
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **IAM fundamentals**: [`IAM-Users-Groups-Policies-Roles.md`](../../original-notes/IAM-Users-Groups-Policies-Roles.md)
+- **Advanced identity (SAP level)**: [`SAP-03-Identity-Federation.md`](../../original-notes/SAP-03-Identity-Federation.md)
+- **Organizations, Identity Center, Cognito, STS**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
+
+---
+
 *Section 03 — Identity & Federation | Last Validated: 2026-05-10*

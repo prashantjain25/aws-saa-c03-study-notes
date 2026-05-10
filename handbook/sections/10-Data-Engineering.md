@@ -236,4 +236,14 @@ Kafka (MSK or self-managed) if:
 
 ---
 
+## 13. Further Reading
+
+For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+
+- **Kinesis Data Streams, Firehose, Analytics**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../original-notes/Integration-Messaging-SQS-SNS-Kinesis.md)
+- **Glue, EMR, Athena, Redshift, QuickSight**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
+- **Architecture patterns**: [`Classic-SolutionsArchitecture.md`](../../original-notes/Classic-SolutionsArchitecture.md)
+
+---
+
 *Section 10 — Data Engineering | Last Validated: 2026-05-10*
