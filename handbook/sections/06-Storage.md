@@ -277,12 +277,12 @@ What is the access pattern?
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **EBS, EFS, Instance Store**: [`EC2-InstanceStorage-EBS-EFS-InstanceStore.md`](../../original-notes/EC2-InstanceStorage-EBS-EFS-InstanceStore.md)
-- **S3 buckets, objects, storage classes, lifecycle**: [`S3-Basics-BucketsObjectsStorageClasses.md`](../../original-notes/S3-Basics-BucketsObjectsStorageClasses.md)
-- **S3 encryption, policies, access points, Object Lambda**: [`S3-Advanced-Security-Encryption.md`](../../original-notes/S3-Advanced-Security-Encryption.md)
-- **FSx, Snowball, Storage Gateway, DataSync**: [`StorageExtras-FSx-Snowball-Gateway.md`](../../original-notes/StorageExtras-FSx-Snowball-Gateway.md)
+- **EBS, EFS, Instance Store**: [`EC2-InstanceStorage-EBS-EFS-InstanceStore.md`](../../detailed-reference/EC2-InstanceStorage-EBS-EFS-InstanceStore.md)
+- **S3 buckets, objects, storage classes, lifecycle**: [`S3-Basics-BucketsObjectsStorageClasses.md`](../../detailed-reference/S3-Basics-BucketsObjectsStorageClasses.md)
+- **S3 encryption, policies, access points, Object Lambda**: [`S3-Advanced-Security-Encryption.md`](../../detailed-reference/S3-Advanced-Security-Encryption.md)
+- **FSx, Snowball, Storage Gateway, DataSync**: [`StorageExtras-FSx-Snowball-Gateway.md`](../../detailed-reference/StorageExtras-FSx-Snowball-Gateway.md)
 
 ---
 

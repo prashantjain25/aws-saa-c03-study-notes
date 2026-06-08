@@ -346,10 +346,10 @@ The canonical serverless API pattern. API Gateway handles routing, throttling, a
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **SQS, SNS, Kinesis, Amazon MQ**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../original-notes/Integration-Messaging-SQS-SNS-Kinesis.md)
-- **API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../original-notes/DynamoDB-APIGateway-Serverless.md)
+- **SQS, SNS, Kinesis, Amazon MQ**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../detailed-reference/Integration-Messaging-SQS-SNS-Kinesis.md)
+- **API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../detailed-reference/DynamoDB-APIGateway-Serverless.md)
 
 ---
 

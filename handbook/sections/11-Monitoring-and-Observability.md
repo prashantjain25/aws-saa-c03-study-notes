@@ -158,10 +158,10 @@ Config records resource configurations and evaluates rules:
 
 ## 8. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **CloudWatch, CloudTrail, Config, EventBridge**: [`Monitoring-CloudWatch-CloudTrail-Config.md`](../../original-notes/Monitoring-CloudWatch-CloudTrail-Config.md)
-- **Advanced monitoring (SAP level)**: [`SAP-11-Monitoring.md`](../../original-notes/SAP-11-Monitoring.md)
+- **CloudWatch, CloudTrail, Config, EventBridge**: [`Monitoring-CloudWatch-CloudTrail-Config.md`](../../detailed-reference/Monitoring-CloudWatch-CloudTrail-Config.md)
+- **Advanced monitoring (SAP level)**: [`SAP-11-Monitoring.md`](../../detailed-reference/SAP-11-Monitoring.md)
 
 ---
 

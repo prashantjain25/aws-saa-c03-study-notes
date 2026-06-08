@@ -221,11 +221,11 @@ IoT / App Events ──► Kinesis Data Streams ──► Kinesis Data Analytics
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **Kinesis Data Streams, Firehose, Analytics**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../original-notes/Integration-Messaging-SQS-SNS-Kinesis.md)
-- **Glue, EMR, Athena, Redshift, QuickSight**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
-- **Architecture patterns**: [`Classic-SolutionsArchitecture.md`](../../original-notes/Classic-SolutionsArchitecture.md)
+- **Kinesis Data Streams, Firehose, Analytics**: [`Integration-Messaging-SQS-SNS-Kinesis.md`](../../detailed-reference/Integration-Messaging-SQS-SNS-Kinesis.md)
+- **Glue, EMR, Athena, Redshift, QuickSight**: [`AdvancedIdentity-DR-OtherServices.md`](../../detailed-reference/AdvancedIdentity-DR-OtherServices.md)
+- **Architecture patterns**: [`Classic-SolutionsArchitecture.md`](../../detailed-reference/Classic-SolutionsArchitecture.md)
 
 ---
 

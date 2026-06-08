@@ -352,10 +352,10 @@ What are your requirements?
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **RDS, Aurora, ElastiCache**: [`RDS-Aurora-ElastiCache.md`](../../original-notes/RDS-Aurora-ElastiCache.md)
-- **DynamoDB, API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../original-notes/DynamoDB-APIGateway-Serverless.md)
+- **RDS, Aurora, ElastiCache**: [`RDS-Aurora-ElastiCache.md`](../../detailed-reference/RDS-Aurora-ElastiCache.md)
+- **DynamoDB, API Gateway, Step Functions, Cognito**: [`DynamoDB-APIGateway-Serverless.md`](../../detailed-reference/DynamoDB-APIGateway-Serverless.md)
 
 ---
 

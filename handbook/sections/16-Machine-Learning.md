@@ -138,9 +138,9 @@ AWS-designed ML chips for cost-efficient training and inference:
 
 ## 6. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **SageMaker, Rekognition, Comprehend, and ML services**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
+- **SageMaker, Rekognition, Comprehend, and ML services**: [`AdvancedIdentity-DR-OtherServices.md`](../../detailed-reference/AdvancedIdentity-DR-OtherServices.md)
 
 ---
 

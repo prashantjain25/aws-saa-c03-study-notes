@@ -283,10 +283,10 @@ A cache with < 80% hit rate is often not worth the operational complexity. Monit
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **CloudFront distributions, OAC, Global Accelerator**: [`CloudFront-GlobalAccelerator.md`](../../original-notes/CloudFront-GlobalAccelerator.md)
-- **ElastiCache Redis/Memcached, caching patterns**: [`RDS-Aurora-ElastiCache.md`](../../original-notes/RDS-Aurora-ElastiCache.md)
+- **CloudFront distributions, OAC, Global Accelerator**: [`CloudFront-GlobalAccelerator.md`](../../detailed-reference/CloudFront-GlobalAccelerator.md)
+- **ElastiCache Redis/Memcached, caching patterns**: [`RDS-Aurora-ElastiCache.md`](../../detailed-reference/RDS-Aurora-ElastiCache.md)
 
 ---
 

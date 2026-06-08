@@ -503,11 +503,11 @@ Trust policy restricts to vendor account + ExternalId. Identity policy restricts
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **IAM fundamentals**: [`IAM-Users-Groups-Policies-Roles.md`](../../original-notes/IAM-Users-Groups-Policies-Roles.md)
-- **Advanced identity (SAP level)**: [`SAP-03-Identity-Federation.md`](../../original-notes/SAP-03-Identity-Federation.md)
-- **Organizations, Identity Center, Cognito, STS**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
+- **IAM fundamentals**: [`IAM-Users-Groups-Policies-Roles.md`](../../detailed-reference/IAM-Users-Groups-Policies-Roles.md)
+- **Advanced identity (SAP level)**: [`SAP-03-Identity-Federation.md`](../../detailed-reference/SAP-03-Identity-Federation.md)
+- **Organizations, Identity Center, Cognito, STS**: [`AdvancedIdentity-DR-OtherServices.md`](../../detailed-reference/AdvancedIdentity-DR-OtherServices.md)
 
 ---
 

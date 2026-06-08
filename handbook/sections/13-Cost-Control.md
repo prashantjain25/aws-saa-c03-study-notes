@@ -154,10 +154,10 @@ ML-powered detection of unusual spending patterns:
 
 ## 8. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **Cost optimization, purchasing options, and pricing models** are covered across multiple original files. Review [`EC2-Basics-InstanceTypes-SecurityGroups.md`](../../original-notes/EC2-Basics-InstanceTypes-SecurityGroups.md) and [`HA-Scalability-ELB-ASG.md`](../../original-notes/HA-Scalability-ELB-ASG.md) for compute pricing details.
-- **Data transfer and storage cost optimization**: [`VPC-Networking-DeepDive.md`](../../original-notes/VPC-Networking-DeepDive.md) and [`S3-Basics-BucketsObjectsStorageClasses.md`](../../original-notes/S3-Basics-BucketsObjectsStorageClasses.md)
+- **Cost optimization, purchasing options, and pricing models** are covered across multiple original files. Review [`EC2-Basics-InstanceTypes-SecurityGroups.md`](../../detailed-reference/EC2-Basics-InstanceTypes-SecurityGroups.md) and [`HA-Scalability-ELB-ASG.md`](../../detailed-reference/HA-Scalability-ELB-ASG.md) for compute pricing details.
+- **Data transfer and storage cost optimization**: [`VPC-Networking-DeepDive.md`](../../detailed-reference/VPC-Networking-DeepDive.md) and [`S3-Basics-BucketsObjectsStorageClasses.md`](../../detailed-reference/S3-Basics-BucketsObjectsStorageClasses.md)
 
 ---
 

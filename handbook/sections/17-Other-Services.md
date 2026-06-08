@@ -147,10 +147,10 @@ Managed quantum computing platform:
 
 ## 10. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **WorkSpaces, IoT, Connect, Wavelength, Local Zones, and other specialized services**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
-- **AWS Global Infrastructure fundamentals**: [`AWS-GettingStarted-GlobalInfrastructure.md`](../../original-notes/AWS-GettingStarted-GlobalInfrastructure.md)
+- **WorkSpaces, IoT, Connect, Wavelength, Local Zones, and other specialized services**: [`AdvancedIdentity-DR-OtherServices.md`](../../detailed-reference/AdvancedIdentity-DR-OtherServices.md)
+- **AWS Global Infrastructure fundamentals**: [`AWS-GettingStarted-GlobalInfrastructure.md`](../../detailed-reference/AWS-GettingStarted-GlobalInfrastructure.md)
 
 ---
 

@@ -207,10 +207,10 @@ On-Prem VMware ──► VMware Cloud on AWS (VMC) ──► Gradual workload mi
 
 ## 10. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **DR strategies, AWS Backup, DMS, MGN, DataSync**: [`AdvancedIdentity-DR-OtherServices.md`](../../original-notes/AdvancedIdentity-DR-OtherServices.md)
-- **Snowball, DataSync, Storage Gateway**: [`StorageExtras-FSx-Snowball-Gateway.md`](../../original-notes/StorageExtras-FSx-Snowball-Gateway.md)
+- **DR strategies, AWS Backup, DMS, MGN, DataSync**: [`AdvancedIdentity-DR-OtherServices.md`](../../detailed-reference/AdvancedIdentity-DR-OtherServices.md)
+- **Snowball, DataSync, Storage Gateway**: [`StorageExtras-FSx-Snowball-Gateway.md`](../../detailed-reference/StorageExtras-FSx-Snowball-Gateway.md)
 
 ---
 

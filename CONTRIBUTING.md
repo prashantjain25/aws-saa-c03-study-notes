@@ -11,12 +11,12 @@ To maintain the quality, consistency, and professional depth of this repository,
 The repository is organized into three distinct layers:
 
 1. **`handbook/` (The Solutions Architect Handbook)**: High-level architectural reference sections (e.g., identity, database, compute, networking). Each section focuses on "why" before "what," trade-off analysis, operational realities, and failure modes.
-2. **`original-notes/` (Study Notes)**: Granular, service-specific files that contain deep-dive CLI commands, exam-specific trivia, and niche service descriptions (e.g., Snowball, App Runner) structured around a strict 4-layer template.
+2. **`detailed-reference/` (Study Notes)**: Granular, service-specific files that contain deep-dive CLI commands, exam-specific trivia, and niche service descriptions (e.g., Snowball, App Runner) structured around a strict 4-layer template.
 3. **`reference/` (Reference Materials)**: Quick-reference cards, service comparison cheat sheets, and common command patterns.
 
 ---
 
-## 🛠️ Contribution Paths: Handbook vs. Original Notes
+## 🛠️ Contribution Paths: Handbook vs. Detailed Reference
 
 Corrections, updates, and new content can be contributed at two different levels depending on the scope and detail of the change:
 
@@ -28,7 +28,7 @@ Corrections, updates, and new content can be contributed at two different levels
   - Adding new architectural decision scenarios to the "Architectural Decision Challenges" section.
 * **Rules**: Must follow the tone guidelines, explain "why" before "what," and use the Ultra-Concise format for scenarios.
 
-### 2. The Original Notes Level (`original-notes/`)
+### 2. The Detailed Reference Level (`detailed-reference/`)
 * **Scope**: Granular CLI commands, low-level technical limits, specific exam trivia, and niche service features.
 * **When to contribute here**:
   - Correcting AWS CLI syntax, missing flags, or outdated parameters.
@@ -37,13 +37,13 @@ Corrections, updates, and new content can be contributed at two different levels
 * **Rules**: Must strictly adhere to the 4-layer template per topic, including Mermaid diagrams and CLI snippets.
 
 > [!IMPORTANT]
-> **Cross-Level Consistency**: If you are correcting a service specification or limit (e.g., Lambda maximum execution timeout), ensure that you update the information at **both** levels—in the corresponding handbook section and in the original notes file—to keep the repository unified and accurate.
+> **Cross-Level Consistency**: If you are correcting a service specification or limit (e.g., Lambda maximum execution timeout), ensure that you update the information at **both** levels—in the corresponding handbook section and in the detailed reference file—to keep the repository unified and accurate.
 
 ---
 
-## 📐 Formatting Rules for `original-notes/`
+## 📐 Formatting Rules for `detailed-reference/`
 
-Every file under `original-notes/` must be structured into logical topics, and each topic **must** contain exactly the following sections in this sequence:
+Every file under `detailed-reference/` must be structured into logical topics, and each topic **must** contain exactly the following sections in this sequence:
 
 ### 1. `## Topic Name`
 A clear, engineering-focused topic heading.

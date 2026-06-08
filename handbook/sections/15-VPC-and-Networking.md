@@ -418,11 +418,11 @@ Route 53 health checks monitor endpoints and influence routing decisions:
 
 ## 9. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **VPC deep dive, subnets, NAT, NACLs, peering, VPN, DX, Transit Gateway**: [`VPC-Networking-DeepDive.md`](../../original-notes/VPC-Networking-DeepDive.md)
-- **Route53 DNS, routing policies, health checks**: [`Route53-DNS-RoutingPolicies.md`](../../original-notes/Route53-DNS-RoutingPolicies.md)
-- **Advanced VPC (SAP level)**: [`SAP-15-VPC.md`](../../original-notes/SAP-15-VPC.md)
+- **VPC deep dive, subnets, NAT, NACLs, peering, VPN, DX, Transit Gateway**: [`VPC-Networking-DeepDive.md`](../../detailed-reference/VPC-Networking-DeepDive.md)
+- **Route53 DNS, routing policies, health checks**: [`Route53-DNS-RoutingPolicies.md`](../../detailed-reference/Route53-DNS-RoutingPolicies.md)
+- **Advanced VPC (SAP level)**: [`SAP-15-VPC.md`](../../detailed-reference/SAP-15-VPC.md)
 
 ---
 

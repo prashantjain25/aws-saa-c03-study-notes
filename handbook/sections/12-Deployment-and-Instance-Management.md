@@ -153,10 +153,10 @@ AppConfig manages application configuration separate from code:
 
 ## 8. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **EC2 placement groups, ENI, hibernate, instance management**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../original-notes/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
-- **ECS, EKS, container deployment patterns**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../original-notes/Containers-ECS-EKS-ECR-Fargate.md)
+- **EC2 placement groups, ENI, hibernate, instance management**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../detailed-reference/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
+- **ECS, EKS, container deployment patterns**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../detailed-reference/Containers-ECS-EKS-ECR-Fargate.md)
 
 ---
 

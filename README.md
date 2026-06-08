@@ -12,7 +12,7 @@ A production-quality architect reference covering 15 sections from Identity to N
 
 Each section is designed for senior cloud architects, principal engineers, and AWS technical reviewers. It explains WHY before WHAT, includes operational realities, failure modes, tradeoff analysis, and cross-service integration patterns.
 
-## 2. Original Study Notes (`original-notes/`)
+## 2. Detailed Reference Notes (`detailed-reference/`)
 
 The original fragmented study note files (~24 files) that were consolidated into the handbook. These contain:
 
@@ -31,7 +31,7 @@ Use these for additional detail on specific topics or for certification exam tri
 
 We welcome contributions and corrections to keep this resource up to date and production-accurate. Depending on the detail and scope of your correction, you can contribute at two different levels:
 - **Handbook Level** ([`handbook/sections/`](handbook/sections/)): For high-level conceptual architectures, trade-off comparisons, and general design scenarios.
-- **Original Notes Level** ([`original-notes/`](original-notes/)): For granular AWS CLI commands, detailed service limits, and low-level technical specifications.
+- **Detailed Reference Level** ([`detailed-reference/`](detailed-reference/)): For granular AWS CLI commands, detailed service limits, and low-level technical specifications.
 
 Please refer to the [**`CONTRIBUTING.md`**](CONTRIBUTING.md) guide for formatting requirements, the Ultra-Concise Scenario/Design syntax, and step-by-step contribution instructions.
 

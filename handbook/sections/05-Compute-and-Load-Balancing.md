@@ -504,13 +504,13 @@ IoT Devices ──► [Kinesis Data Streams] ──► [Lambda / KCL Consumer]
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **EC2 fundamentals, instance types, security groups**: [`EC2-Basics-InstanceTypes-SecurityGroups.md`](../../original-notes/EC2-Basics-InstanceTypes-SecurityGroups.md)
-- **Placement groups, ENI, hibernate**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../original-notes/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
-- **ELB, ASG, HA, scalability patterns**: [`HA-Scalability-ELB-ASG.md`](../../original-notes/HA-Scalability-ELB-ASG.md)
-- **Lambda, concurrency, cold starts, RDS Proxy**: [`Serverless-Lambda-EdgeFunctions.md`](../../original-notes/Serverless-Lambda-EdgeFunctions.md)
-- **ECS, EKS, Fargate, ECR, container orchestration**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../original-notes/Containers-ECS-EKS-ECR-Fargate.md)
+- **EC2 fundamentals, instance types, security groups**: [`EC2-Basics-InstanceTypes-SecurityGroups.md`](../../detailed-reference/EC2-Basics-InstanceTypes-SecurityGroups.md)
+- **Placement groups, ENI, hibernate**: [`EC2-Associate-PlacementGroups-ENI-Hibernate.md`](../../detailed-reference/EC2-Associate-PlacementGroups-ENI-Hibernate.md)
+- **ELB, ASG, HA, scalability patterns**: [`HA-Scalability-ELB-ASG.md`](../../detailed-reference/HA-Scalability-ELB-ASG.md)
+- **Lambda, concurrency, cold starts, RDS Proxy**: [`Serverless-Lambda-EdgeFunctions.md`](../../detailed-reference/Serverless-Lambda-EdgeFunctions.md)
+- **ECS, EKS, Fargate, ECR, container orchestration**: [`Containers-ECS-EKS-ECR-Fargate.md`](../../detailed-reference/Containers-ECS-EKS-ECR-Fargate.md)
 
 ---
 

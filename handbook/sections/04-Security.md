@@ -411,11 +411,11 @@ flowchart TB
 
 ## 13. Further Reading
 
-For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
+For deeper coverage, CLI commands, and exam-specific trivia, see the detailed reference:
 
-- **KMS, WAF, Shield, GuardDuty, Inspector, Macie**: [`Security-KMS-WAF-Shield-GuardDuty.md`](../../original-notes/Security-KMS-WAF-Shield-GuardDuty.md)
-- **Advanced security (SAP level)**: [`SAP-04-Security.md`](../../original-notes/SAP-04-Security.md)
-- **CloudTrail, Config, monitoring integration**: [`Monitoring-CloudWatch-CloudTrail-Config.md`](../../original-notes/Monitoring-CloudWatch-CloudTrail-Config.md)
+- **KMS, WAF, Shield, GuardDuty, Inspector, Macie**: [`Security-KMS-WAF-Shield-GuardDuty.md`](../../detailed-reference/Security-KMS-WAF-Shield-GuardDuty.md)
+- **Advanced security (SAP level)**: [`SAP-04-Security.md`](../../detailed-reference/SAP-04-Security.md)
+- **CloudTrail, Config, monitoring integration**: [`Monitoring-CloudWatch-CloudTrail-Config.md`](../../detailed-reference/Monitoring-CloudWatch-CloudTrail-Config.md)
 
 ---
 
