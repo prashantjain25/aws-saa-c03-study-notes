@@ -16,6 +16,31 @@ The repository is organized into three distinct layers:
 
 ---
 
+## 🛠️ Contribution Paths: Handbook vs. Original Notes
+
+Corrections, updates, and new content can be contributed at two different levels depending on the scope and detail of the change:
+
+### 1. The Handbook Level (`handbook/sections/`)
+* **Scope**: High-level, conceptual architecture, trade-off comparisons (e.g., database choices), cross-service patterns, and failure mode analysis.
+* **When to contribute here**: 
+  - Correcting conceptual architecture errors.
+  - Adding or updating trade-off matrix tables.
+  - Adding new architectural decision scenarios to the "Architectural Decision Challenges" section.
+* **Rules**: Must follow the tone guidelines, explain "why" before "what," and use the Ultra-Concise format for scenarios.
+
+### 2. The Original Notes Level (`original-notes/`)
+* **Scope**: Granular CLI commands, low-level technical limits, specific exam trivia, and niche service features.
+* **When to contribute here**:
+  - Correcting AWS CLI syntax, missing flags, or outdated parameters.
+  - Updating technical specifications (e.g., service limits, default values, timeout limits).
+  - Adding detailed walkthrough scenarios.
+* **Rules**: Must strictly adhere to the 4-layer template per topic, including Mermaid diagrams and CLI snippets.
+
+> [!IMPORTANT]
+> **Cross-Level Consistency**: If you are correcting a service specification or limit (e.g., Lambda maximum execution timeout), ensure that you update the information at **both** levels—in the corresponding handbook section and in the original notes file—to keep the repository unified and accurate.
+
+---
+
 ## 📐 Formatting Rules for `original-notes/`
 
 Every file under `original-notes/` must be structured into logical topics, and each topic **must** contain exactly the following sections in this sequence:

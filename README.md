@@ -25,9 +25,16 @@ Use these for additional detail on specific topics or for certification exam tri
 
 ## 3. Reference Materials (`reference/`)
 
-- `QUICK-REFERENCE.md` — Service comparison cheat sheets
-- `CLI_EXAMPLES.md` — Common AWS CLI patterns
+- [`QUICK-REFERENCE.md`](reference/QUICK-REFERENCE.md) — Service comparison cheat sheets
+
+## 4. Contributing & Corrections
+
+We welcome contributions and corrections to keep this resource up to date and production-accurate. Depending on the detail and scope of your correction, you can contribute at two different levels:
+- **Handbook Level** ([`handbook/sections/`](handbook/sections/)): For high-level conceptual architectures, trade-off comparisons, and general design scenarios.
+- **Original Notes Level** ([`original-notes/`](original-notes/)): For granular AWS CLI commands, detailed service limits, and low-level technical specifications.
+
+Please refer to the [**`CONTRIBUTING.md`**](CONTRIBUTING.md) guide for formatting requirements, the Ultra-Concise Scenario/Design syntax, and step-by-step contribution instructions.
 
 ---
 
-*Repository Structure Refactored: 2026-05-10*
+*Repository Structure Refactored: 2026-06-08*
