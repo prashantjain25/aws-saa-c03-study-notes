@@ -134,18 +134,8 @@ AppConfig manages application configuration separate from code:
 
 ## 6. Interview Challenges
 
-### Q1: "Design a zero-downtime deployment for an EC2-based web application."
-
-**Answer**: Blue/Green deployment with CodeDeploy:
-1. Current environment (Blue) running v1 behind ALB
-2. Deploy v2 to new ASG (Green) with same ALB but separate target group
-3. Run smoke tests against Green
-4. Swap ALB traffic from Blue to Green target group
-5. Monitor CloudWatch metrics and error rates
-6. If issues detected: swap back to Blue (rollback in seconds)
-7. If stable: terminate Blue instances after validation period
-
-Alternative: ALB weighted target groups for canary deployment (gradual traffic shift).
+* **Scenario:** Design a zero-downtime deployment for an EC2-based web application.
+  * **Design:** Implement a Blue/Green deployment with CodeDeploy. Because this allows you to maintain the current environment (Blue) running v1 behind an ALB while deploying v2 to a new ASG (Green) with the same ALB but a separate target group. After running smoke tests against Green, you swap ALB traffic from the Blue to Green target group and monitor CloudWatch metrics and error rates. If issues are detected, you can swap back to Blue (rollback in seconds). If stable, terminate the Blue instances after a validation period. Alternatively, use ALB weighted target groups for a canary deployment (gradual traffic shift).
 
 ---
 

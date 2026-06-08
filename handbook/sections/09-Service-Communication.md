@@ -315,36 +315,14 @@ The canonical serverless API pattern. API Gateway handles routing, throttling, a
 
 ## 7. Interview Challenges
 
-### Q1: "SQS Standard vs FIFO — a financial trading system needs to process orders exactly once and in sequence. Which queue?"
+* **Scenario:** A financial trading system needs to process orders exactly once and in sequence.
+  * **Design:** Use SQS FIFO with deduplication. Because FIFO guarantees ordering within a message group and provides exactly-once delivery via `MessageDeduplicationId`. Standard queues allow duplicates and lack ordering guarantees. (If higher throughput beyond 300/sec is needed, shard across multiple FIFO queues).
 
-**Answer**: SQS FIFO with deduplication. Rationale:
-- FIFO guarantees ordering within a message group (e.g., per-trader or per-instrument)
-- Exactly-once delivery with `MessageDeduplicationId` prevents duplicate processing
-- Throughput limit (300/sec, 3,000 with batching) is acceptable for most trading systems
-- If higher throughput is needed, shard across multiple FIFO queues (one per trading instrument)
+* **Scenario:** You need to choose between EventBridge and SNS for an event-driven architecture.
+  * **Design:** Use EventBridge for content-based filtering on nested JSON, schema registries, SaaS integrations, event replay, or cross-account buses. Because SNS is strictly for simple high-throughput pub/sub, mobile push, SMS/email alerting, and delivering to multiple protocols from one topic.
 
-Standard queue is wrong because it allows duplicates and does not guarantee ordering.
-
-### Q2: "When would you use EventBridge over SNS?"
-
-**Answer**: EventBridge when you need:
-1. **Content-based filtering**: Route events based on nested JSON values, not just topic subscription
-2. **Schema registry**: Enforce event schemas and auto-generate code bindings
-3. **SaaS integrations**: Ingest events from third-party services (Zendesk, Datadog, Salesforce)
-4. **Event replay**: Replay events from archive for debugging or recovery
-5. **Cross-account event buses**: Centralize events from multiple accounts into a single bus
-
-SNS when you need:
-1. Simple pub/sub with high throughput
-2. Mobile push notifications
-3. SMS/email alerting
-4. Protocol diversity (SQS, Lambda, HTTP, email, SMS in one topic)
-
-### Q3: "API Gateway REST vs HTTP — a microservices platform needs 50 APIs. Which type?"
-
-**Answer**: HTTP API for all 50 unless a specific REST feature is required. HTTP APIs are ~71% cheaper, have lower latency, and support the essential features: JWT authorizers, VPC links, CORS, and WAF integration. Only use REST API if you need request/response transformation, per-method caching, or resource policies.
-
-> **Migration note**: HTTP APIs cannot do everything REST APIs can, but the gap has narrowed. Evaluate your actual requirements rather than defaulting to REST "just in case."
+* **Scenario:** A microservices platform needs to deploy 50 APIs. Choose between API Gateway REST vs HTTP.
+  * **Design:** Default to HTTP API. Because it is ~71% cheaper, has lower latency, and supports essentials like JWT authorizers, VPC links, CORS, and WAF. Only use REST API if you specifically need request/response transformation, per-method caching, or resource policies. Evaluate actual requirements rather than defaulting to REST "just in case."
 
 ---
 

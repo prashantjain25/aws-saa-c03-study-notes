@@ -125,7 +125,14 @@ Managed quantum computing platform:
 
 ---
 
-## 8. Points to Remember
+## 8. Interview Challenges
+
+* **Scenario:** A university needs to provide students with temporary access to heavy 3D rendering software for a weekly lab, without requiring a persistent desktop for each student.
+  * **Design:** Use Amazon AppStream 2.0. Because it streams the specific application to any browser, providing high-performance compute only when needed, avoiding the higher costs of persistent WorkSpaces.
+
+---
+
+## 9. Points to Remember
 
 - **WorkSpaces = persistent DaaS; AppStream = non-persistent app streaming**.
 - **IoT Core provides MQTT broker, device shadows, and rules engine** — the backbone of IoT on AWS.
@@ -138,7 +145,7 @@ Managed quantum computing platform:
 
 ---
 
-## 9. Further Reading
+## 10. Further Reading
 
 For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
 

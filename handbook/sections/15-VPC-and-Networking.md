@@ -381,61 +381,17 @@ Route 53 health checks monitor endpoints and influence routing decisions:
 
 ## 7. Interview Challenges
 
-### Q1: "A private subnet instance cannot reach S3. Security groups and NACLs look correct. What's wrong?"
+* **Scenario:** A private subnet instance cannot reach S3. Security groups and NACLs look correct.
+  * **Design:** Check the route table and add a VPC Gateway Endpoint for S3 (preferred) or a route to a NAT Gateway. Because private subnets need an explicit route (Gateway Endpoint is free and private, NAT Gateway costs money) to reach S3; traffic will drop without one.
 
-**Answer**: Check the route table. Private subnets need either:
-1. A VPC Gateway Endpoint for S3 (preferred — free, private, no NAT needed)
-2. A route to a NAT Gateway (costs money, less efficient)
+* **Scenario:** Design VPC networking for a 3-tier application across 3 AZs with on-prem connectivity.
+  * **Design:** Create 9 subnets total (Public, Private, Data per AZ). Use ALB SG (`0.0.0.0/0`) -> App SG (from ALB) -> Data SG (from App). Attach VPC to Transit Gateway for on-prem routing. Because this provides HA, strict network segmentation (defense in depth via chained SGs), and scalable hybrid connectivity.
 
-If the route table has no route to S3 and no NAT Gateway route, S3 traffic has no path. Gateway Endpoints are the correct solution for S3 and DynamoDB access from private subnets.
+* **Scenario:** Connect 20 VPCs that all need full mesh communication (VPC Peering vs Transit Gateway).
+  * **Design:** Use Transit Gateway instead of VPC Peering. Because peering requires 190 non-transitive connections (n(n-1)/2), whereas TGW needs only 20 attachments and provides centralized routing, segmentation, and operational simplicity.
 
-### Q2: "Design VPC networking for a 3-tier application across 3 AZs with on-prem connectivity."
-
-**Answer**:
-```
-VPC: 10.0.0.0/16
-├── AZ-a
-│   ├── Public:  10.0.1.0/24  (ALB, NAT GW-a)
-│   ├── Private: 10.0.2.0/24  (App tier)
-│   └── Data:    10.0.3.0/24  (RDS, ElastiCache)
-├── AZ-b
-│   ├── Public:  10.0.4.0/24  (ALB, NAT GW-b)
-│   ├── Private: 10.0.5.0/24  (App tier)
-│   └── Data:    10.0.6.0/24  (RDS, ElastiCache)
-├── AZ-c
-│   ├── Public:  10.0.7.0/24  (ALB, NAT GW-c)
-│   ├── Private: 10.0.8.0/24  (App tier)
-│   └── Data:    10.0.9.0/24  (RDS, ElastiCache)
-└── Transit Gateway Attachment
-    └── Routes: 192.168.0.0/16 (on-prem) via DX
-```
-
-Security:
-- ALB SG: inbound 443 from `0.0.0.0/0`
-- App SG: inbound 8080 from ALB SG only
-- Data SG: inbound 3306/6379 from App SG only
-- NACL: allow ephemeral ports outbound, specific ports inbound
-
-### Q3: "VPC Peering vs Transit Gateway for 20 VPCs that all need to communicate."
-
-**Answer**: Transit Gateway. Peering requires n(n-1)/2 connections = 190 peering relationships for 20 VPCs. Transit Gateway requires 20 attachments + TGW route table propagation. TGW also provides:
-- Centralized routing control
-- Network segmentation via multiple route tables
-- Cross-region peering
-- Better visibility (CloudWatch metrics per attachment)
-
-The only reason to use peering is if TGW cost ($0.05/hour per attachment) is prohibitive for a very large number of VPCs with minimal traffic. Even then, TGW usually wins on operational simplicity.
-
-### Q4: "A security group allows inbound SSH from 0.0.0.0/0. A developer cannot SSH to the instance. Why?"
-
-**Answer**: Check these in order:
-1. Is the instance in a public subnet with a route to IGW?
-2. Does the instance have a public IP or Elastic IP?
-3. Is the NACL blocking inbound port 22 or outbound ephemeral ports?
-4. Is there a host-level firewall (iptables, Windows Firewall) blocking SSH?
-5. Is the SSH key correct and the sshd service running?
-
-Security group rules are necessary but not sufficient. Routing, IP assignment, and host-level configuration must also be correct.
+* **Scenario:** A security group allows inbound SSH from `0.0.0.0/0`, but a developer cannot SSH to the instance.
+  * **Design:** Verify public/Elastic IP, public subnet IGW route, NACL rules (inbound 22, outbound ephemeral ports), host-level firewalls, and SSH service/key. Because SG rules are necessary but not sufficient; routing, IP assignment, and stateless subnet boundaries (NACLs) must also permit the connection.
 
 ---
 

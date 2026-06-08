@@ -247,24 +247,14 @@ What is the access pattern?
 
 ## 7. Interview Challenges
 
-### Q1: "Design a data lake that stores 10 PB of log data with 7-year retention, queryable by analysts."
+* **Scenario:** Design a data lake that stores 10 PB of log data with 7-year retention, queryable by analysts.
+  * **Design:** Ingest logs via Kinesis Data Firehose to S3, transform to Parquet using Glue/Lambda, and query directly with Athena. Because Parquet minimizes Athena scan costs, and S3 Lifecycle policies can automatically transition raw data to Glacier Deep Archive, providing cost-effective 10 PB storage with enforced 7-year retention.
 
-**Answer**:
-1. **Ingestion**: Application logs → Kinesis Data Firehose → S3 (raw bucket)
-2. **Organization**: S3 prefix structure: `s3://logs/year=2026/month=05/day=10/service=payment/`
-3. **Transformation**: Lambda or Glue ETL converts raw logs to Parquet (columnar, compressed)
-4. **Storage class**: Raw data → S3 Standard (30 days) → S3 Glacier Flexible Retrieval (90 days) → S3 Glacier Deep Archive (1 year). Parquet aggregates → S3 Standard-IA.
-5. **Query**: Athena queries Parquet directly in S3. No warehouse needed for ad-hoc analysis.
-6. **Governance**: S3 Object Lock (WORM) for compliance. Macie for PII detection. Lifecycle policies enforce retention.
-7. **Cost**: Deep Archive is ~$1/TB/month = $10K/month for 10 PB. Athena charges per TB scanned — use partitioning and columnar formats to minimize scanned data.
+* **Scenario:** An application needs shared storage across 50 EC2 instances in multiple AZs. EBS or EFS?
+  * **Design:** EFS. Because EBS volumes are AZ-bound and typically attach to a single instance. EFS is designed for multi-AZ, multi-instance shared access via NFS (or FSx for Windows if Windows-based).
 
-### Q2: "An application needs shared storage across 50 EC2 instances in multiple AZs. EBS or EFS?"
-
-**Answer**: EFS. EBS volumes are AZ-bound and can only attach to one instance (except Multi-Attach io1/io2, which is limited). EFS is designed for multi-AZ, multi-instance access via NFS. If the workload is Windows-based, FSx for Windows File Server is the alternative.
-
-### Q3: "Why would you use S3 Intelligent-Tiering over manually managing lifecycle policies?"
-
-**Answer**: Intelligent-Tiering removes the operational burden of predicting access patterns. It monitors object access and moves infrequently accessed objects to cheaper tiers automatically. It also has an Archive Access tier (90 days) and Deep Archive Access tier (180 days) for automatic long-term archiving. The monitoring cost ($0.0025 per 1,000 objects/month) is usually negligible compared to the savings from automatic tiering and the operational cost of maintaining lifecycle rules.
+* **Scenario:** Why would you use S3 Intelligent-Tiering over manually managing lifecycle policies?
+  * **Design:** Use S3 Intelligent-Tiering. Because it removes the operational burden of predicting access patterns by automatically moving infrequently accessed objects to cheaper tiers. This typically yields savings that outweigh its small monitoring fee, avoiding the overhead of manual lifecycle management.
 
 ---
 

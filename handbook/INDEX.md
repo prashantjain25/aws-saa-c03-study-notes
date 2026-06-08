@@ -66,5 +66,5 @@
 
 ---
 
-*Index for AWS Solutions Architect Handbook | Refactored: 2026-05-10*
+*Index for AWS Solutions Architect Handbook | Refactored: 2026-06-08*
 

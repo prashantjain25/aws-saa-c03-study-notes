@@ -318,45 +318,17 @@ What are your requirements?
 
 ## 6. Interview Challenges
 
-### Q1: "RDS Multi-AZ vs Read Replica — a customer wants to scale read traffic. Which do they use?"
+* **Scenario:** A customer wants to scale read traffic for an RDS database.
+  * **Design:** Use Read Replicas, potentially combined with Multi-AZ. Because Multi-AZ is for High Availability and its standby cannot serve read traffic (except in SQL Server legacy mirroring), while Read Replicas are explicitly designed to handle read scaling (up to 15 replicas per instance). Combining both is the standard production pattern for HA and read scaling.
 
-**Answer**: Read Replicas. Multi-AZ is for HA, not read scaling. The standby in Multi-AZ cannot serve read traffic (it exists solely for failover). Read Replicas are explicitly designed for read scaling and can serve traffic. You can have up to 15 Read Replicas per RDS instance.
+* **Scenario:** A DynamoDB table with 10,000 WCU and 1,000 items is experiencing throttling during writes.
+  * **Design:** Mitigate hot partition issues by redesigning the partition key for higher cardinality or using write sharding. Because DynamoDB distributes capacity per partition, not globally, and a single partition is limited to 1,000 WCU. If all writes hit the same key, it throttles regardless of the table's total provisioned capacity.
 
-Follow-up: "Can they use both?" Yes. Multi-AZ for HA + Read Replicas for scaling. This is the standard production pattern.
+* **Scenario:** Choosing between Aurora PostgreSQL and RDS PostgreSQL for a new OLTP application.
+  * **Design:** Default to Aurora PostgreSQL. Because Aurora offers better performance (up to 3x throughput), auto-scaling storage without volume management, instant failover, and Serverless v2 options for variable workloads. Only choose RDS if you need specific unsupported extensions, OS-level access (RDS Custom), or if you are already on RDS and migration costs outweigh the benefits.
 
-### Q2: "A DynamoDB table throttles despite having 10,000 WCU provisioned. The table has 1,000 items. What's wrong?"
-
-**Answer**: Hot partition. DynamoDB distributes capacity per partition, not globally. If all writes hit the same partition key (e.g., a single `DeviceID` or a poorly designed timestamp key), that partition is limited to 1,000 WCU regardless of total table capacity.
-
-Solutions:
-1. Redesign partition key for higher cardinality (e.g., `DeviceID#Date` instead of just `Date`)
-2. Use write sharding (append random suffix to partition key, query all shards)
-3. Enable adaptive capacity (helps but doesn't fix bad design)
-4. Switch to On-Demand (auto-scales per partition but 5x more expensive)
-
-### Q3: "Aurora or RDS PostgreSQL for a new OLTP application?"
-
-**Answer**: Aurora PostgreSQL unless there is a specific reason to use RDS:
-- Aurora has better performance (3x throughput vs RDS PostgreSQL)
-- Aurora storage auto-scales (no volume management)
-- Aurora instant failover (vs RDS's DNS-based failover with longer cutover)
-- Aurora Serverless v2 option for variable workloads
-- Same cost model (compute + storage), often cheaper at scale due to better efficiency
-
-Reasons to choose RDS PostgreSQL:
-- Need specific PostgreSQL extensions not supported by Aurora
-- Need RDS Custom for OS-level access
-- Already running RDS and migration cost exceeds benefit
-
-### Q4: "Design a session store for a global web application with 10 million daily active users."
-
-**Answer**: DynamoDB with Global Tables:
-- **Why DynamoDB**: Massive scale (10M users), single-digit millisecond latency, automatic scaling, TTL for automatic session expiry.
-- **Why Global Tables**: Users access from multiple regions. Global Tables replicate sessions so EU users hit the EU DynamoDB table, US users hit the US table.
-- **Schema**: `PK = SessionID`, attributes: `UserID`, `Data`, `ExpiresAt`.
-- **TTL**: Enable DynamoDB TTL on `ExpiresAt` for automatic cleanup.
-- **DAX**: Add DAX if sub-millisecond latency is required.
-- **Alternative**: ElastiCache Redis with cross-region replication (via Redis Cluster or third-party tools) if session data is complex and the team prefers Redis data structures.
+* **Scenario:** Designing a session store for a global web application with 10 million daily active users.
+  * **Design:** Use DynamoDB with Global Tables and enable TTL on an `ExpiresAt` attribute. Because DynamoDB provides single-digit millisecond latency, automatic scaling, and TTL for automatic cleanup at massive scale, while Global Tables ensure low-latency local reads/writes across regions. Add DAX if sub-millisecond latency is needed, or use ElastiCache Redis if complex data structures are preferred.
 
 ---
 

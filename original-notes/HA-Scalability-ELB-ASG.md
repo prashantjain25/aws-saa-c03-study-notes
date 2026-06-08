@@ -101,6 +101,8 @@ graph TD
 
 ### 🗺️ Visual Architecture: Landing Requests & Target Groups
 
+![ALB Routing](../images/alb.png)
+
 ```mermaid
 graph TD
     Client([Internet Client]) -->|HTTPS Port 443| ALB{Application Load Balancer}
@@ -195,6 +197,8 @@ graph TD
 ---
 
 ### 🗺️ Visual Architecture: SNI Host-Header Routing
+
+![SNI Routing](../images/alb-ssl-cert-host-routing.png)
 
 ```mermaid
 sequenceDiagram

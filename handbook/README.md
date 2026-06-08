@@ -11,7 +11,7 @@ Unlike certification cram materials, this handbook:
 - **Explains WHY before WHAT** — architectural reasoning, not feature lists
 - **Validates against modern AWS behavior** — no deprecated terminology or outdated assumptions
 - **Includes operational realities** — failure modes, cost implications, scaling limits
-- **Provides interview hardening** — common traps, hidden limitations, tradeoff analysis
+- **Provides interview hardening** — common traps, hidden limitations, tradeoff analysis, and **Ultra-Concise Scenario/Design** probing constraints
 - **Emphasizes cross-service integration** — architects think in systems, not silos
 - **Uses correct networking semantics** — packet flow, ingress/egress, routing correctness
 
@@ -100,7 +100,7 @@ Outdated terminology has been corrected:
 
 ---
 
-**Version:** 3.0 Architect Handbook  
-**Refactored:** 2026-05-10  
+**Version:** 3.1 Architect Handbook  
+**Refactored:** 2026-06-08  
 **Format:** Markdown  
 **Validation:** AWS documentation aligned, modern behavior verified

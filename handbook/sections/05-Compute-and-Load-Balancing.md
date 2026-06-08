@@ -468,40 +468,17 @@ IoT Devices ──► [Kinesis Data Streams] ──► [Lambda / KCL Consumer]
 
 ## 7. Interview Challenges
 
-### Q1: "When would you use Spot Instances in production?"
+* **Scenario:** Running production workloads on Spot Instances to save costs.
+  * **Design:** Use Spot Fleet or ASG Mixed Instances Policy (Spot + On-Demand base) for workloads that are fault-tolerant, checkpoint-capable, diversified across AZs/instance types, and not latency-sensitive. Because Spot instances can be interrupted with a 2-minute warning, you should never run 100% Spot for critical production without failover.
 
-**Answer**: Spot is viable for production when the workload is:
-1. **Fault-tolerant**: Can handle individual instance termination (stateless microservices, ASG with min > 1)
-2. **Checkpoint-capable**: Long-running jobs save progress periodically (Spark, batch ETL)
-3. **Diversified**: Use mixed instance types across multiple AZs. If one instance type is fully reclaimed, others continue.
-4. **Not latency-sensitive**: A 2-minute warning is sufficient to drain connections.
+* **Scenario:** A client needs to whitelist your load balancer IP in their firewall.
+  * **Design:** Use a Network Load Balancer (NLB). Because NLB provides a static IP per AZ (via Elastic IP), whereas ALB provides a DNS name that resolves to dynamic, changing IPs over time.
 
-Use **Spot Fleet** or **ASG Mixed Instances Policy** with Spot + On-Demand. Never run 100% Spot for critical production unless you have cross-region failover.
+* **Scenario:** A Lambda function in a VPC needs performant access to S3 and DynamoDB.
+  * **Design:** Use VPC Gateway Endpoints for S3 and DynamoDB instead of a NAT Gateway. Because endpoints keep traffic on the AWS private backbone, are free for S3/DynamoDB, and avoid adding NAT Gateway latency to the Lambda VPC cold start. (Alternatively, if no other VPC resources are needed, remove the function from the VPC entirely to avoid ENI creation overhead).
 
-### Q2: "ALB vs NLB: a client needs to whitelist our load balancer IP in their firewall. Which do we use?"
-
-**Answer**: NLB. NLB provides a static IP per AZ (via Elastic IP). ALB provides a DNS name that resolves to multiple dynamic IPs. While you could provide all current ALB IPs, they change over time. NLB's static IP is designed for this exact use case.
-
-### Q3: "A Lambda function in a VPC needs to access S3 and DynamoDB. What's the most performant architecture?"
-
-**Answer**: Use **VPC endpoints** (Gateway endpoint for S3, Interface endpoint for DynamoDB) instead of NAT Gateway. Reasons:
-1. VPC endpoints keep traffic on AWS's private backbone — no internet traversal
-2. Gateway endpoints are free (S3, DynamoDB only)
-3. Interface endpoints (PrivateLink) have per-hour and per-GB charges but are required for most other services
-4. NAT Gateway cold start adds latency to Lambda's already-slower VPC cold start
-
-Alternatively, if the function doesn't truly need VPC access for other resources, remove VPC configuration entirely. Lambda without VPC has no ENI creation overhead.
-
-### Q4: "ECS vs EKS for a team of 5 developers building a microservices platform."
-
-**Answer**: Likely ECS with Fargate. Rationale:
-- Team size: 5 developers cannot sustainably operate a Kubernetes cluster (upgrades, CNI debugging, etcd monitoring).
-- Learning curve: ECS concepts (task definitions, services) are simpler than Kubernetes (deployments, services, ingress, configmaps, secrets).
-- Cost: No $72/month EKS cluster fee. Fargate billing is per-task.
-- Feature needs: Unless they need service mesh, custom operators, or multi-cloud portability, ECS provides everything.
-- Migration path: If needs evolve, ECS tasks can run on EKS later using ECS Anywhere patterns or migration to native Kubernetes.
-
-Exception: If the team already has Kubernetes expertise, EKS is reasonable. But "we might need Kubernetes features someday" is not a good reason to pay the operational cost today.
+* **Scenario:** A team of 5 developers is building a microservices platform and needs to choose between ECS and EKS.
+  * **Design:** Use ECS with Fargate. Because the operational burden, learning curve, and cost (no $72/month cluster fee) of EKS are too high for a small team without existing Kubernetes expertise, whereas ECS provides sufficient capabilities for standard microservices and simpler management.
 
 ---
 

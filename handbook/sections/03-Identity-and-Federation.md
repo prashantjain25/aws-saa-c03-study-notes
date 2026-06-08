@@ -437,30 +437,17 @@ aws cloudtrail lookup-events \
 
 ## 9. Architect Interview Challenges
 
-### Q1: "Design IAM for a company with 500 developers, 50 AWS accounts, and SOC2 compliance requirements."
+* **Scenario:** A company with 500 developers, 50 AWS accounts, and SOC2 compliance requirements needs an IAM design.
+  * **Design:** Implement a multi-account structure (Management + OUs for Sandbox, NonProd, Prod, Security) with zero workloads in the management account. Use IAM Identity Center with SAML 2.0 integration to a corporate IdP, ensuring zero IAM Users in workload accounts. Create Permission Sets per role type with ABAC. Enforce guardrails via SCPs (e.g., deny destructive actions without MFA in Prod, deny stopping CloudTrail in Security). Centralize CloudTrail to the Security account and configure break-glass emergency roles. Because this limits blast radius, centralizes lifecycle management, and guarantees the immutable audit trails required for SOC2.
 
-**Answer Outline**:
-1. **Multi-account structure**: Management account + OUs (Sandbox, NonProd, Prod, Security). No workloads in management account.
-2. **Identity**: IAM Identity Center with SAML 2.0 integration to corporate IdP (Okta/Azure AD). Zero IAM Users in workload accounts.
-3. **Access Pattern**: Permission Sets per role type (Developer, SRE, Security Auditor). ABAC where possible (department tags).
-4. **Guardrails**: SCPs in every OU. Prod OU: deny destructive actions without MFA, deny region violations. Security OU: deny leaving org, deny stopping CloudTrail.
-5. **Audit**: Organizations CloudTrail trail to central S3 in Security account. IAM Access Analyzer enabled in all accounts.
-6. **Break-glass**: Emergency access roles in every account, requiring MFA + approval workflow. Access logged and alerted.
+* **Scenario:** A developer created a role with `Principal: *` in the trust policy, and you must assess the risk.
+  * **Design:** Clarify that the risk is not unauthenticated internet access, but that *any* authenticated AWS principal in any account can attempt assumption. Because if an attacker has `sts:AssumeRole` permissions and there is no `ExternalId` or `SourceIp` condition restricting the trust policy, they will successfully assume the role, creating a severe vulnerability if the role has permissive identity policies.
 
-### Q2: "A developer created a role with `Principal: *` in the trust policy. What's the actual risk?"
+* **Scenario:** You must explain why a Permission Boundary does not grant permissions.
+  * **Design:** Describe the Permission Boundary as a maximum-permissions ceiling that restricts rather than grants. Because effective permissions are the intersection of the identity policy and the permission boundary. If the boundary allows `s3:*` but the identity policy has no S3 statements, the result is an implicit DENY; the identity policy must explicitly allow the action within the allowed boundary.
 
-**Answer**: The risk is NOT that random internet users can assume it (they need AWS credentials first). The risk is that ANY authenticated AWS principal — any account, any user, any role — can attempt assumption. If they also have `sts:AssumeRole` in their identity policy, and there's no `ExternalId` or `SourceIp` condition, they succeed. This is especially dangerous if combined with a permissive identity policy.
-
-### Q3: "Explain why a Permission Boundary does not grant permissions."
-
-**Answer**: A Permission Boundary is a maximum-permissions ceiling. It answers "What is the MOST this principal could ever do?" not "What CAN this principal do?" For access to work, the principal needs an identity policy that explicitly Allows the action, AND that action must be within the boundary. If the boundary allows S3:* but the identity policy has no S3 statements → DENY. If the identity policy allows S3:* but the boundary only allows S3:GetObject → only GetObject works.
-
-### Q4: "When would you use a resource policy vs cross-account role assumption?"
-
-**Answer**:
-- **Resource policy** (same account): Simpler. Direct access without STS overhead. Use when the resource owner wants to grant access to specific principals in the same account.
-- **Cross-account role assumption**: Required when crossing account boundaries (unless both identity AND resource policies explicitly allow). Also preferred when you need session tags, CloudTrail audit trails of the assumption event, or when the access pattern is complex (multiple services, varying permissions).
-- **Resource policy (cross-account)**: Possible for S3, KMS, SQS, SNS, Lambda. Both the caller's identity policy AND the resource policy must allow. Simpler for single-resource access but harder to audit centrally.
+* **Scenario:** You are choosing between a resource policy and cross-account role assumption.
+  * **Design:** Use a resource policy for simpler, same-account access or isolated single-resource cross-account access (like an S3 bucket or KMS key) without STS overhead. Use cross-account role assumption for complex access patterns, crossing account boundaries for multiple services, or when you need session tags and explicit CloudTrail audit logs of the assumption event. Because role assumption provides centralized auditing and scales better for complex identities, whereas resource policies are simpler but harder to audit centrally at scale.
 
 ---
 

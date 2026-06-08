@@ -378,26 +378,14 @@ flowchart TB
 
 ## 8. Interview Challenges and Tradeoffs
 
-### Q1: "SSE-S3 vs SSE-KMS vs SSE-C vs Client-Side Encryption — when would you use each?"
+* **Scenario:** You need to choose an S3 encryption method.
+  * **Design:** Use **SSE-S3** for zero operational burden, **SSE-KMS** for key access control and auditing, **SSE-C** to use an existing key management system while AWS encrypts, or **Client-Side** for maximum confidentiality. Because each method shifts the trust boundary and operational burden differently depending on your compliance requirements.
 
-**Answer**:
-- **SSE-S3**: Default S3 encryption. AWS manages keys entirely. Use when you need encryption-at-rest but have no key management requirements. Zero operational burden.
-- **SSE-KMS**: S3 encryption with KMS key. You control key policy, rotation, and audit. Use when you need key-level access control, CloudTrail audit of every encryption operation, or cross-account key sharing. Costs $1/key/month + API charges.
-- **SSE-C**: You provide the key in the API request. AWS encrypts server-side but uses YOUR key. Use when you have an existing key management system and need AWS to do the encryption work. Key must be sent with every request.
-- **Client-Side**: You encrypt before sending to S3. AWS never sees plaintext. Use for maximum confidentiality, regulatory requirements, or when you don't trust the cloud provider with data. You manage key distribution, rotation, and recovery.
+* **Scenario:** A GuardDuty finding says an EC2 instance is communicating with a known crypto-mining C2 domain.
+  * **Design:** **Contain** by isolating the instance (modify SG), **preserve evidence** via memory/EBS snapshots without stopping it, **analyze** via CloudTrail/VPC Flow Logs, **remediate** by rotating credentials/patching, and **prevent** via EventBridge automated responses. Because live memory contains forensic evidence and automated isolation stops lateral movement.
 
-### Q2: "A GuardDuty finding says an EC2 instance is communicating with a known crypto-mining C2 domain. What's your response?"
-
-**Answer**:
-1. **Contain**: Isolate the instance — modify its security group to block all outbound traffic except to your incident response tools.
-2. **Preserve evidence**: Create a memory snapshot (if possible) and EBS snapshot before terminating. Do NOT stop the instance yet — live memory contains forensic evidence.
-3. **Analyze**: Check CloudTrail for how the instance was launched (compromised credentials? vulnerable application?). Check VPC Flow Logs for lateral movement.
-4. **Remediate**: Rotate all credentials that had access to the instance. Patch the vulnerability that allowed entry. Review IAM policies for excessive permissions.
-5. **Prevent**: Implement GuardDuty automated response (EventBridge → Lambda → isolate instance). Enable VPC Flow Logs in all accounts. Implement least-privilege IAM.
-
-### Q3: "Why is AWS Config not sufficient for security monitoring?"
-
-**Answer**: Config evaluates configuration state against rules. It detects "this S3 bucket is public" but NOT "someone is exfiltrating data from this bucket right now." Config is **point-in-time compliance**; GuardDuty/CloudTrail are **continuous behavioral monitoring**. You need both: Config to ensure baseline security posture, and GuardDuty/CloudTrail to detect active threats and audit actions.
+* **Scenario:** You are using AWS Config to monitor security but need to ensure it's sufficient.
+  * **Design:** Use both **AWS Config** for point-in-time configuration compliance and **GuardDuty/CloudTrail** for continuous behavioral monitoring. Because Config detects misconfigurations (e.g., a public S3 bucket) but not active threats or data exfiltration.
 
 ---
 

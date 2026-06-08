@@ -105,6 +105,25 @@ AWS-designed ML chips for cost-efficient training and inference:
 
 ---
 
+## Interview Challenges
+
+* **Scenario:** You need to add object detection, facial analysis, or text recognition to an application.
+  * **Design:** Amazon Rekognition. Because it provides pre-trained computer vision APIs without requiring ML expertise.
+
+* **Scenario:** You need to extract sentiment, entities, and key phrases from text.
+  * **Design:** Amazon Comprehend. Because it is a fully managed NLP service that provides pre-trained models via API.
+
+* **Scenario:** You need to build, train, and deploy custom machine learning models.
+  * **Design:** Amazon SageMaker. Because it provides a complete managed platform for the ML lifecycle, including notebooks, training jobs, and endpoints.
+
+* **Scenario:** You want to integrate foundation models (LLMs) via API without managing infrastructure.
+  * **Design:** Amazon Bedrock. Because it is a serverless platform providing access to leading foundation models.
+
+* **Scenario:** You need to reduce the cost of large-scale ML training or high-throughput inference.
+  * **Design:** AWS Trainium or Inferentia instances. Because these purpose-built AWS chips offer significantly lower costs than traditional GPUs.
+
+---
+
 ## 5. Points to Remember
 
 - **Start with managed AI services** (Rekognition, Comprehend, Bedrock) before building custom models.

@@ -139,15 +139,8 @@ Config records resource configurations and evaluates rules:
 
 ## 6. Interview Challenges
 
-### Q1: "An EC2 instance appears healthy but users report timeouts. How do you debug?"
-
-**Answer**:
-1. **CloudWatch**: Check CPU, network, disk I/O. High CPU? Check `CPUUtilization`. Network saturated? Check `NetworkIn/Out`.
-2. **CloudWatch Logs**: Check application logs for errors, slow queries, or exceptions.
-3. **X-Ray**: If instrumented, trace the request path to identify which segment adds latency.
-4. **ALB Target Group**: Check target health. Instance might be failing health checks (returning 5xx on `/health`) even if EC2 status checks pass.
-5. **RDS/Database**: Check database connection count and slow query log. Connection pool exhaustion causes timeouts with healthy CPU.
-6. **Security Groups/NACLs**: Recent change might be blocking egress traffic (e.g., database port).
+* **Scenario:** An EC2 instance appears healthy but users report timeouts. How do you debug?
+  * **Design:** Check CloudWatch metrics (CPU/Network), CloudWatch Logs (app errors), X-Ray (latency segments), ALB target health, RDS connection pools, and recent Security Group/NACL changes. Because a healthy instance status check only confirms the hypervisor and network reachability, while timeouts are typically caused by application exhaustion, downstream database bottlenecks, or egress blocking.
 
 ---
 

@@ -176,7 +176,23 @@ On-Prem VMware ──► VMware Cloud on AWS (VMC) ──► Gradual workload mi
 
 ---
 
-## 8. Points to Remember
+## 8. Interview Challenges
+
+* **Scenario:** You need to migrate an active on-premises Oracle database to Aurora PostgreSQL with near-zero downtime.
+  * **Design:** Use the AWS Schema Conversion Tool (SCT) to translate the schema, then use AWS Database Migration Service (DMS) with Full Load + CDC (Change Data Capture). Because SCT automates the schema translation, and DMS CDC keeps the target database synchronized with the source until you are ready to cut over.
+
+* **Scenario:** You are executing a lift-and-shift of 500 on-premises VMs to AWS.
+  * **Design:** Use AWS Application Migration Service (MGN). Because it performs continuous block-level replication of servers to a staging area, allowing for rapid cutover with minimal downtime.
+
+* **Scenario:** You need to securely transfer a 100 TB SMB file share to Amazon FSx for Windows File Server.
+  * **Design:** Use AWS DataSync. Because it is a managed service optimized for migrating file systems, natively handling encryption in transit, compression, and data integrity verification.
+
+* **Scenario:** Your company requires an RPO of seconds and an RTO of minutes for on-premises servers but wants to minimize idle compute costs in AWS.
+  * **Design:** Use AWS Elastic Disaster Recovery (DRS). Because it replicates to low-cost storage in a staging area and only provisions fully powered compute instances during a failover or drill.
+
+---
+
+## 9. Points to Remember
 
 - **The 7 R's provide a migration strategy framework** — not every application should be re-architected.
 - **MGN is the standard for lift-and-shift server migration** — continuous replication minimizes cutover risk.
@@ -189,7 +205,7 @@ On-Prem VMware ──► VMware Cloud on AWS (VMC) ──► Gradual workload mi
 
 ---
 
-## 9. Further Reading
+## 10. Further Reading
 
 For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
 

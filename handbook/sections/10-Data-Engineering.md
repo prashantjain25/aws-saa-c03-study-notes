@@ -198,28 +198,11 @@ IoT / App Events ──► Kinesis Data Streams ──► Kinesis Data Analytics
 
 ## 7. Interview Challenges
 
-### Q1: "Athena vs Redshift for a 50 TB data warehouse?"
+* **Scenario:** Deciding between Athena and Redshift for a 50 TB data warehouse.
+  * **Design:** Redshift. Because Redshift is a purpose-built MPP data warehouse with columnar storage, workload management (WLM), and predictable cluster-based costs, making it ideal for dedicated BI workloads and complex queries at scale. Use Athena only for ad-hoc exploration and smaller data lake queries since its costs scale linearly with data scanned.
 
-**Answer**: Redshift. Athena is serverless query-on-S3; Redshift is a purpose-built data warehouse. At 50 TB:
-- Redshift columnar storage + MPP provides faster complex queries
-- Redshift has workload management (WLM) for query prioritization
-- Redshift supports UPSERT, transactions, and materialized views
-- Athena costs scale linearly with data scanned; Redshift costs are predictable (cluster-based)
-
-Use Athena for ad-hoc exploration, data lake querying, and smaller datasets. Use Redshift for dedicated BI workloads, complex joins, and predictable performance requirements.
-
-### Q2: "Kinesis Data Streams vs Kafka for a real-time event pipeline?"
-
-**Answer**: Kinesis Data Streams if:
-- You want fully managed infrastructure (no ZooKeeper, no broker management)
-- AWS-native integration is important (Lambda, Firehose, EMR)
-- Per-shard throughput model fits your scale
-
-Kafka (MSK or self-managed) if:
-- You need higher throughput per partition
-- You need longer retention (Kinesis max 365 days)
-- You have existing Kafka expertise and ecosystem (Kafka Connect, Schema Registry)
-- Multi-cloud portability is required
+* **Scenario:** Choosing between Kinesis Data Streams and Kafka for a real-time event pipeline.
+  * **Design:** Kinesis Data Streams for fully managed infrastructure, a per-shard throughput model, and AWS-native integration (Lambda, Firehose, EMR). Kafka (MSK or self-managed) if you need higher throughput per partition, longer retention, have existing Kafka expertise, or require multi-cloud portability.
 
 ---
 

@@ -252,33 +252,14 @@ A cache with < 80% hit rate is often not worth the operational complexity. Monit
 
 ## 4. Interview Challenges
 
-### Q1: "A product catalog API has 1000 products, accessed millions of times per day. Cache with Redis or CloudFront?"
+* **Scenario:** A product catalog API has 1000 products, accessed millions of times per day. You need to decide whether to cache with Redis or CloudFront.
+  * **Design:** Use both, for different layers: CloudFront at the edge for API responses (TTL minutes to hours) and Redis near the application for database query results (TTL seconds to minutes). Because CloudFront reduces origin load and improves global latency for identical requests, while Redis caches frequently accessed query results (like inventory) near the application. Invalidation can be orchestrated via EventBridge (write to RDS → invalidate Redis key → invalidate CloudFront).
 
-**Answer**: Both, for different layers.
-- **CloudFront**: Cache the API responses at the edge for identical requests. This reduces origin load and improves global latency. TTL: minutes to hours (products don't change frequently).
-- **Redis**: Cache the database query results (product details, inventory counts) near the application. TTL: seconds to minutes (inventory changes more frequently than product descriptions).
-- **Architecture**: User → CloudFront (edge cache) → ALB → Application → Redis (application cache) → RDS (source of truth).
-- **Invalidation**: Product update in admin panel → write to RDS → invalidate Redis key → optionally invalidate CloudFront cache. EventBridge can orchestrate this.
+* **Scenario:** A cached value is showing stale data for 5 minutes after a database update, and you need to fix it.
+  * **Design:** Reduce TTL, implement write-through caching, use event-driven invalidation (e.g., DynamoDB Streams → Lambda → Redis delete), or use versioned cache keys. Because the current TTL is too long or invalidation isn't working. The right choice depends on staleness tolerance (e.g., write-through for financial data, shorter TTL for social media).
 
-### Q2: "A cached value is showing stale data for 5 minutes after database update. How do you fix it?"
-
-**Answer**: The TTL is too long, or invalidation is not working. Options:
-1. **Reduce TTL** to match acceptable staleness window. Tradeoff: more database load.
-2. **Implement write-through caching**: Update cache atomically with database write. Tradeoff: write latency.
-3. **Event-driven invalidation**: DynamoDB Streams or RDS triggers → Lambda → Redis delete key. Tradeoff: complexity, eventual consistency of invalidation itself.
-4. **Versioned cache keys**: Key includes data version. Updates write to new key. Application reads latest version. Old versions expire naturally. Tradeoff: memory overhead.
-
-The right choice depends on the staleness tolerance. Financial data: write-through. Social media feed: shorter TTL or accept staleness.
-
-### Q3: "Memcached or Redis for session storage?"
-
-**Answer**: Redis. Rationale:
-- Sessions need persistence (don't want to lose all sessions if a node restarts). Redis offers optional AOF/RDB persistence.
-- Sessions benefit from TTL (automatic expiry). Both support this.
-- Sessions may need replication for HA. Redis has Multi-AZ failover. Memcached does not.
-- Session data might need complex structures (JSON with nested fields). Redis supports hashes and JSON.
-
-Memcached is only appropriate if sessions are truly ephemeral (e.g., anonymous preview sessions that can be lost) and cost is the absolute priority.
+* **Scenario:** You need to choose between Memcached and Redis for session storage.
+  * **Design:** Use Redis. Because sessions need persistence (Redis offers AOF/RDB), benefit from TTL, may need replication for HA (Redis has Multi-AZ failover), and might need complex structures (Redis supports hashes and JSON). Memcached is only appropriate if sessions are truly ephemeral and cost is the absolute priority.
 
 ---
 

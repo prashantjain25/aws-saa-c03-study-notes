@@ -139,6 +139,19 @@ ML-powered detection of unusual spending patterns:
 
 ---
 
+## 6. Interview Challenges
+
+* **Scenario:** A company has unpredictable EC2 workloads but wants to reduce costs without committing to specific instance types.
+  * **Design:** Purchase Compute Savings Plans. Because Compute Savings Plans offer significant discounts and apply automatically across all EC2 instance families, sizes, regions, Fargate, and Lambda usage, providing maximum flexibility for dynamic workloads.
+
+* **Scenario:** A legacy application on private EC2 instances is transferring massive amounts of data to S3, incurring high NAT Gateway data processing charges.
+  * **Design:** Implement a VPC Gateway Endpoint for S3. Because Gateway Endpoints route traffic securely over the AWS internal network, bypassing the NAT Gateway entirely and eliminating the per-GB data processing fees.
+
+* **Scenario:** Development and test environments are left running 24/7, leading to high monthly EC2 and RDS bills.
+  * **Design:** Deploy AWS Instance Scheduler using EventBridge and Lambda. Because automatically stopping non-production instances outside of business hours (e.g., nights and weekends) halts compute charges and dramatically reduces wasted spend.
+
+---
+
 ## 8. Further Reading
 
 For deeper coverage, CLI commands, and exam-specific trivia, see the original notes:
