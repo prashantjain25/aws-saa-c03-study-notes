@@ -125,7 +125,7 @@ Managed quantum computing platform:
 
 ---
 
-## 8. Interview Challenges
+## 8. Architectural Decision Challenges
 
 * **Scenario:** A university needs to provide students with temporary access to heavy 3D rendering software for a weekly lab, without requiring a persistent desktop for each student.
   * **Design:** Use Amazon AppStream 2.0. Because it streams the specific application to any browser, providing high-performance compute only when needed, avoiding the higher costs of persistent WorkSpaces.

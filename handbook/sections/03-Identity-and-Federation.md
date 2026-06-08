@@ -99,7 +99,7 @@ A Role has two policies: a **Trust Policy** (who can assume the role) and **Iden
 }
 ```
 
-> **Critical Interview Question**: "Why does `Principal: *` in a trust policy NOT mean 'anyone on the internet can assume this role'?"
+> **Critical Design Scenario**: "Why does `Principal: *` in a trust policy NOT mean 'anyone on the internet can assume this role'?"
 > 
 > **Answer**: The trust policy principal `"*"` or `"AWS": "*"` only allows AWS principals (authenticated AWS entities) to attempt assumption. An unauthenticated internet user cannot call `sts:AssumeRole` — they need valid AWS credentials first. However, `"*"` is still dangerous because it allows any authenticated AWS account. Always scope trust policies to specific account ARNs or use `ExternalId` for third-party scenarios.
 
@@ -123,7 +123,7 @@ The confused deputy problem is a classic cross-account security vulnerability:
 }
 ```
 
-> **Architect Interview Trap**: "Does ExternalId encrypt the session or add encryption to the role assumption?" No. ExternalId is a plaintext string condition. It prevents the confused deputy by adding a required parameter that only the legitimate third party knows. It is NOT a secret in the cryptographic sense — it is a shared identifier that prevents arbitrary assumption.
+> **Architectural Trap**: "Does ExternalId encrypt the session or add encryption to the role assumption?" No. ExternalId is a plaintext string condition. It prevents the confused deputy by adding a required parameter that only the legitimate third party knows. It is NOT a secret in the cryptographic sense — it is a shared identifier that prevents arbitrary assumption.
 
 ---
 
@@ -435,7 +435,7 @@ aws cloudtrail lookup-events \
 
 ---
 
-## 9. Architect Interview Challenges
+## 9. Architectural Decision Challenges
 
 * **Scenario:** A company with 500 developers, 50 AWS accounts, and SOC2 compliance requirements needs an IAM design.
   * **Design:** Implement a multi-account structure (Management + OUs for Sandbox, NonProd, Prod, Security) with zero workloads in the management account. Use IAM Identity Center with SAML 2.0 integration to a corporate IdP, ensuring zero IAM Users in workload accounts. Create Permission Sets per role type with ABAC. Enforce guardrails via SCPs (e.g., deny destructive actions without MFA in Prod, deny stopping CloudTrail in Security). Centralize CloudTrail to the Security account and configure break-glass emergency roles. Because this limits blast radius, centralizes lifecycle management, and guarantees the immutable audit trails required for SOC2.

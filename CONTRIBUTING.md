@@ -1,6 +1,6 @@
 # Contributing to AWS Solutions Architect Notes
 
-Thank you for contributing to the AWS Solutions Architect Notes repository. This project is a curated, high-quality, production-grade reference for senior cloud architects, principal engineers, and AWS interviewers. 
+Thank you for contributing to the AWS Solutions Architect Notes repository. This project is a curated, high-quality, production-grade reference for senior cloud architects, principal engineers, and AWS technical reviewers. 
 
 To maintain the quality, consistency, and professional depth of this repository, all contributions must adhere to the guidelines outlined below.
 
@@ -34,7 +34,7 @@ An inline **Mermaid** diagram visualizing the process flow, routing logic, or hi
 - Keep diagrams simple, clean, and directly aligned with the technical text.
 
 ### 4. `### 🧠 Architectural Probing & Decision Scenarios`
-Practical, interview-level architectural challenges written in the **Ultra-Concise Scenario/Design** format (see details below).
+Practical, production-level architectural challenges written in the **Ultra-Concise Scenario/Design** format (see details below).
 
 ### 5. `### 📐 Application Design Patterns & Trade-offs`
 A critical analysis of different implementation patterns (e.g., Multi-Region Active-Active vs. Active-Passive) highlighting operational complexity, sync lag, cost, and latency trade-offs.
@@ -49,7 +49,7 @@ Concrete AWS CLI examples showing how to perform tasks related to the topic. All
 
 ## 🧠 The "Ultra-Concise" Scenario/Design Format
 
-The **Architectural Probing & Decision Scenarios** section of note files and the **Architect Interview Challenges** section of handbook files must strictly follow this syntax:
+The **Architectural Probing & Decision Scenarios** section of note files and the **Architectural Decision Challenges** section of handbook files must strictly follow this syntax:
 
 ```markdown
 * **Scenario:** [Engineering constraint or problem statement].

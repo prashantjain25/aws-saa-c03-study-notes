@@ -139,7 +139,7 @@ ML-powered detection of unusual spending patterns:
 
 ---
 
-## 6. Interview Challenges
+## 6. Architectural Decision Challenges
 
 * **Scenario:** A company has unpredictable EC2 workloads but wants to reduce costs without committing to specific instance types.
   * **Design:** Purchase Compute Savings Plans. Because Compute Savings Plans offer significant discounts and apply automatically across all EC2 instance families, sizes, regions, Fargate, and Lambda usage, providing maximum flexibility for dynamic workloads.

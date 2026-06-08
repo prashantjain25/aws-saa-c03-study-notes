@@ -10,7 +10,7 @@ A production-quality architect reference covering 15 sections from Identity to N
 - **Navigate sections**: [`handbook/INDEX.md`](handbook/INDEX.md)
 - **Read sections**: [`handbook/sections/`](handbook/sections/)
 
-Each section is designed for senior cloud architects, principal engineers, and AWS interviewers. It explains WHY before WHAT, includes operational realities, failure modes, tradeoff analysis, and cross-service integration patterns.
+Each section is designed for senior cloud architects, principal engineers, and AWS technical reviewers. It explains WHY before WHAT, includes operational realities, failure modes, tradeoff analysis, and cross-service integration patterns.
 
 ## 2. Original Study Notes (`original-notes/`)
 

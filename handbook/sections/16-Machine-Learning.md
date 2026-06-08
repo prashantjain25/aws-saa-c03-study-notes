@@ -105,7 +105,7 @@ AWS-designed ML chips for cost-efficient training and inference:
 
 ---
 
-## Interview Challenges
+## Architectural Decision Challenges
 
 * **Scenario:** You need to add object detection, facial analysis, or text recognition to an application.
   * **Design:** Amazon Rekognition. Because it provides pre-trained computer vision APIs without requiring ML expertise.

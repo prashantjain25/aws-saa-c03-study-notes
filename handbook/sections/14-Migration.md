@@ -176,7 +176,7 @@ On-Prem VMware ──► VMware Cloud on AWS (VMC) ──► Gradual workload mi
 
 ---
 
-## 8. Interview Challenges
+## 8. Architectural Decision Challenges
 
 * **Scenario:** You need to migrate an active on-premises Oracle database to Aurora PostgreSQL with near-zero downtime.
   * **Design:** Use the AWS Schema Conversion Tool (SCT) to translate the schema, then use AWS Database Migration Service (DMS) with Full Load + CDC (Change Data Capture). Because SCT automates the schema translation, and DMS CDC keeps the target database synchronized with the source until you are ready to cut over.

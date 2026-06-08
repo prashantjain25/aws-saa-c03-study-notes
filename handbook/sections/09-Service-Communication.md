@@ -48,7 +48,7 @@ Message available ──► Consumer receives ──► Invisible (processing)
 | In-flight messages | 120,000 (Standard), 20,000 (FIFO) | Limits concurrent processing capacity |
 | Delay seconds | 0-15 minutes (per message or queue default) | Schedule message delivery into the future |
 
-> **Interview Trap**: "SQS guarantees exactly-once delivery." FALSE. Only FIFO queues with deduplication ID provide exactly-once. Standard queues provide at-least-once. Applications MUST be idempotent.
+> **Architectural Trap**: "SQS guarantees exactly-once delivery." FALSE. Only FIFO queues with deduplication ID provide exactly-once. Standard queues provide at-least-once. Applications MUST be idempotent.
 
 ---
 
@@ -313,7 +313,7 @@ The canonical serverless API pattern. API Gateway handles routing, throttling, a
 
 ---
 
-## 7. Interview Challenges
+## 7. Architectural Decision Challenges
 
 * **Scenario:** A financial trading system needs to process orders exactly once and in sequence.
   * **Design:** Use SQS FIFO with deduplication. Because FIFO guarantees ordering within a message group and provides exactly-once delivery via `MessageDeduplicationId`. Standard queues allow duplicates and lack ordering guarantees. (If higher throughput beyond 300/sec is needed, shard across multiple FIFO queues).

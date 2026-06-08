@@ -196,7 +196,7 @@ IoT / App Events ──► Kinesis Data Streams ──► Kinesis Data Analytics
 
 ---
 
-## 7. Interview Challenges
+## 7. Architectural Decision Challenges
 
 * **Scenario:** Deciding between Athena and Redshift for a 50 TB data warehouse.
   * **Design:** Redshift. Because Redshift is a purpose-built MPP data warehouse with columnar storage, workload management (WLM), and predictable cluster-based costs, making it ideal for dedicated BI workloads and complex queries at scale. Use Athena only for ad-hoc exploration and smaller data lake queries since its costs scale linearly with data scanned.

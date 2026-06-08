@@ -40,7 +40,7 @@ CIDR block selection is a long-term decision. You cannot change a VPC's primary 
 
 A `/28` subnet has 16 IPs, 11 usable. A `/24` has 256 IPs, 251 usable.
 
-> **Exam/Interview Trap**: "How many EC2 instances in a /24 subnet?" 251 — NOT 256. The 5 reserved IPs plus the network and broadcast addresses reduce the count.
+> **Exam/Architectural Trap**: "How many EC2 instances in a /24 subnet?" 251 — NOT 256. The 5 reserved IPs plus the network and broadcast addresses reduce the count.
 
 ### 1.3 Public vs Private vs Isolated Subnets
 
@@ -379,7 +379,7 @@ Route 53 health checks monitor endpoints and influence routing decisions:
 
 ---
 
-## 7. Interview Challenges
+## 7. Architectural Decision Challenges
 
 * **Scenario:** A private subnet instance cannot reach S3. Security groups and NACLs look correct.
   * **Design:** Check the route table and add a VPC Gateway Endpoint for S3 (preferred) or a route to a NAT Gateway. Because private subnets need an explicit route (Gateway Endpoint is free and private, NAT Gateway costs money) to reach S3; traffic will drop without one.

@@ -316,7 +316,7 @@ What are your requirements?
 
 ---
 
-## 6. Interview Challenges
+## 6. Architectural Decision Challenges
 
 * **Scenario:** A customer wants to scale read traffic for an RDS database.
   * **Design:** Use Read Replicas, potentially combined with Multi-AZ. Because Multi-AZ is for High Availability and its standby cannot serve read traffic (except in SQL Server legacy mirroring), while Read Replicas are explicitly designed to handle read scaling (up to 15 replicas per instance). Combining both is the standard production pattern for HA and read scaling.

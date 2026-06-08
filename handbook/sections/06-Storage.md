@@ -245,7 +245,7 @@ What is the access pattern?
 
 ---
 
-## 7. Interview Challenges
+## 7. Architectural Decision Challenges
 
 * **Scenario:** Design a data lake that stores 10 PB of log data with 7-year retention, queryable by analysts.
   * **Design:** Ingest logs via Kinesis Data Firehose to S3, transform to Parquet using Glue/Lambda, and query directly with Athena. Because Parquet minimizes Athena scan costs, and S3 Lifecycle policies can automatically transition raw data to Glacier Deep Archive, providing cost-effective 10 PB storage with enforced 7-year retention.

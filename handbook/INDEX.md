@@ -1,8 +1,8 @@
 # AWS Solutions Architect Handbook — Index
 
-> **Purpose**: This is a production-quality architect handbook, not study notes. Each section is designed to survive scrutiny from senior cloud architects, principal engineers, and AWS interviewers. Depth and correctness take precedence over brevity.
+> **Purpose**: This is a production-quality architect handbook, not study notes. Each section is designed to survive scrutiny from senior cloud architects, principal engineers, and AWS technical reviewers. Depth and correctness take precedence over brevity.
 >
-> **Structure**: 15 sections organized by architectural domain. Each section covers purpose, core architecture, scaling, HA, security, performance, cost, operational realities, failure scenarios, misconceptions, interview challenges, tradeoffs, and cross-service integrations.
+> **Structure**: 15 sections organized by architectural domain. Each section covers purpose, core architecture, scaling, HA, security, performance, cost, operational realities, failure scenarios, misconceptions, architectural decision challenges, tradeoffs, and cross-service integrations.
 
 ---
 
@@ -10,7 +10,7 @@
 
 | # | Section | Topics | Depth |
 |---|---------|--------|-------|
-| 03 | [Identity & Federation](sections/03-Identity-and-Federation.md) | IAM, Organizations, STS, IAM Identity Center, Cognito, Directory Service, ABAC, permission boundaries, SCPs, cross-account patterns, confused deputy | Enterprise identity architecture, multi-account governance, interview-level policy evaluation |
+| 03 | [Identity & Federation](sections/03-Identity-and-Federation.md) | IAM, Organizations, STS, IAM Identity Center, Cognito, Directory Service, ABAC, permission boundaries, SCPs, cross-account patterns, confused deputy | Enterprise identity architecture, multi-account governance, production-level policy evaluation |
 | 04 | [Security](sections/04-Security.md) | KMS, CloudHSM, Secrets Manager, Parameter Store, ACM, WAF, Shield, GuardDuty, Inspector, Macie, Security Hub, Access Analyzer, CloudTrail, Config, encryption architecture, threat detection | Encryption at scale, centralized security account, compliance frameworks, defense in depth |
 | 05 | [Compute & Load Balancing](sections/05-Compute-and-Load-Balancing.md) | EC2, Lambda, ECS, EKS, ALB, NLB, GWLB, Auto Scaling, Spot, Graviton, placement groups, ENI, instance types, purchasing options | Production compute design, container orchestration decisions, load balancer selection framework |
 | 06 | [Storage](sections/06-Storage.md) | S3 (all tiers), EBS (all types), EFS, FSx (all variants), Storage Gateway, S3 replication, lifecycle, encryption, performance optimization | Data lake architecture, storage class economics, hybrid cloud patterns |
@@ -48,11 +48,11 @@
 
 ### For Exam Preparation (SAA-C03)
 1. Read each section sequentially, focusing on "Why" and architectural tradeoffs
-2. Review interview challenges at the end of each section — these reflect exam scenario questions
+2. Review architectural decision challenges at the end of each section — these reflect exam scenario questions
 3. Study cross-service integration patterns — the exam heavily tests integrated architectures
 4. Memorize the "Points to Remember" at section ends as concise review material
 
-### For Interview Preparation
+### For Architecture Design Reviews
 1. Focus on Sections 03 (Identity), 04 (Security), 05 (Compute), 08 (Databases), 15 (Networking)
 2. Practice explaining tradeoffs: ALB vs NLB, ECS vs EKS, DynamoDB vs Aurora, SQS vs EventBridge
 3. Be ready to whiteboard the cross-service patterns listed above
@@ -60,7 +60,7 @@
 
 ### For Architecture Reviews
 1. Use the "Points to Remember" as a review checklist for your designs
-2. Reference the interview challenges to anticipate reviewer questions
+2. Reference the architectural decision challenges to anticipate reviewer questions
 3. Validate your designs against the tradeoff analysis in each section
 4. Ensure cross-service integrations are explicitly documented
 

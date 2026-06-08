@@ -1,6 +1,6 @@
 # AWS Solutions Architect Handbook
 
-> **Purpose**: A production-quality architect reference, not certification notes. This handbook covers AWS services with the depth, correctness, and operational realism expected in senior cloud architecture roles. Each section is designed to survive scrutiny from principal engineers, infrastructure reviewers, and AWS interviewers.
+> **Purpose**: A production-quality architect reference, not certification notes. This handbook covers AWS services with the depth, correctness, and operational realism expected in senior cloud architecture roles. Each section is designed to survive scrutiny from principal engineers, infrastructure reviewers, and AWS technical reviewers.
 >
 > **Scope**: 15 sections covering Identity, Security, Compute, Storage, Caching, Databases, Service Communication, Data Engineering, Monitoring, Deployment, Cost Control, Migration, Networking, Machine Learning, and Other Services.
 
@@ -11,7 +11,7 @@ Unlike certification cram materials, this handbook:
 - **Explains WHY before WHAT** — architectural reasoning, not feature lists
 - **Validates against modern AWS behavior** — no deprecated terminology or outdated assumptions
 - **Includes operational realities** — failure modes, cost implications, scaling limits
-- **Provides interview hardening** — common traps, hidden limitations, tradeoff analysis, and **Ultra-Concise Scenario/Design** probing constraints
+- **Provides scenario hardening** — common traps, hidden limitations, tradeoff analysis, and **Ultra-Concise Scenario/Design** probing constraints
 - **Emphasizes cross-service integration** — architects think in systems, not silos
 - **Uses correct networking semantics** — packet flow, ingress/egress, routing correctness
 
@@ -29,7 +29,7 @@ Each major section follows a consistent template:
 8. **Operational Realities** — What breaks in production
 9. **Failure Scenarios** — How to debug and recover
 10. **Common Misconceptions** — What senior engineers get wrong
-11. **Interview Challenges** — Defensible architecture decisions
+11. **Architectural Decision Challenges** — Defensible architecture decisions
 12. **Tradeoffs** — When NOT to use this service
 13. **Alternative Comparisons** — When to choose a competitor
 
@@ -71,10 +71,10 @@ Each major section follows a consistent template:
 
 ### For SAA-C03 Certification
 - Sections align with exam domains but go deeper than required
-- Focus on "Points to Remember" and "Interview Challenges" for exam scenario questions
+- Focus on "Points to Remember" and "Architectural Decision Challenges" for exam scenario questions
 - Cross-service patterns reflect the integrated architecture questions on the exam
 
-### For Architecture Interviews
+### For Architecture Reviews
 - Every section contains questions a principal engineer might ask
 - Tradeoff analysis demonstrates senior-level thinking
 - Operational realities show production experience

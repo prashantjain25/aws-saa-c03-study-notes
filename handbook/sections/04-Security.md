@@ -92,7 +92,7 @@ CloudHSM provides dedicated FIPS 140-2 Level 3 hardware. Unlike KMS (FIPS 140-2 
 - Client software must run on EC2 in the same VPC
 - **KMS Custom Key Store** offers a middle ground: KMS API convenience with CloudHSM backing. Higher latency, but simpler operations.
 
-> **Interview Trap**: "Is CloudHSM more secure than KMS?" Security is not a scalar. CloudHSM provides stronger hardware isolation and compliance certification. KMS provides better integration, automatic scaling, and lower operational overhead. The right answer depends on the threat model and compliance requirements.
+> **Architectural Trap**: "Is CloudHSM more secure than KMS?" Security is not a scalar. CloudHSM provides stronger hardware isolation and compliance certification. KMS provides better integration, automatic scaling, and lower operational overhead. The right answer depends on the threat model and compliance requirements.
 
 ---
 
@@ -280,7 +280,7 @@ Access Analyzer analyzes resource policies (S3, IAM roles, KMS keys, Lambda, SQS
 - **Unused access findings** (new): Identify IAM roles with permissions that haven't been used in 90+ days
 - **Custom archive rules**: Mark expected external access as intentional to reduce noise
 
-> **Architect Interview Question**: "How do you prevent S3 bucket misconfigurations?"
+> **Architectural Scenario**: "How do you prevent S3 bucket misconfigurations?"
 > **Answer**: Defense in depth — (1) SCPs to block public bucket policies, (2) IAM Access Analyzer to detect external access, (3) AWS Config rule for s3-bucket-public-read-prohibited, (4) Amazon Macie to detect sensitive data in exposed buckets, (5) GuardDuty to alert on anomalous access patterns.
 
 ---
@@ -376,7 +376,7 @@ flowchart TB
 
 ---
 
-## 8. Interview Challenges and Tradeoffs
+## 8. Architectural Decision Challenges and Tradeoffs
 
 * **Scenario:** You need to choose an S3 encryption method.
   * **Design:** Use **SSE-S3** for zero operational burden, **SSE-KMS** for key access control and auditing, **SSE-C** to use an existing key management system while AWS encrypts, or **Client-Side** for maximum confidentiality. Because each method shifts the trust boundary and operational burden differently depending on your compliance requirements.

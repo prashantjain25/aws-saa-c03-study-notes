@@ -250,7 +250,7 @@ A cache with < 80% hit rate is often not worth the operational complexity. Monit
 
 ---
 
-## 4. Interview Challenges
+## 4. Architectural Decision Challenges
 
 * **Scenario:** A product catalog API has 1000 products, accessed millions of times per day. You need to decide whether to cache with Redis or CloudFront.
   * **Design:** Use both, for different layers: CloudFront at the edge for API responses (TTL minutes to hours) and Redis near the application for database query results (TTL seconds to minutes). Because CloudFront reduces origin load and improves global latency for identical requests, while Redis caches frequently accessed query results (like inventory) near the application. Invalidation can be orchestrated via EventBridge (write to RDS → invalidate Redis key → invalidate CloudFront).

@@ -296,7 +296,7 @@ Sustained rate: 500 new environments per minute after burst
 
 **Provisioned Concurrency**: Pre-warm environments so they are ready to serve requests immediately. Eliminates cold start latency. You pay for provisioned capacity even when not used.
 
-> **Critical Interview Question**: "A Lambda function processes SQS messages. Messages start queueing up. CPU is low. What's happening?"
+> **Critical Design Scenario**: "A Lambda function processes SQS messages. Messages start queueing up. CPU is low. What's happening?"
 > **Answer**: Check `ConcurrentExecutions` metric. If it hits the reserved concurrency limit or account burst limit, Lambda cannot create more environments. Messages queue in SQS. CPU is low because the function isn't even running — it's waiting for concurrency capacity. Solution: increase reserved concurrency or account limit.
 
 ### 4.3 Cold Starts and Mitigation
@@ -466,7 +466,7 @@ IoT Devices ──► [Kinesis Data Streams] ──► [Lambda / KCL Consumer]
 
 ---
 
-## 7. Interview Challenges
+## 7. Architectural Decision Challenges
 
 * **Scenario:** Running production workloads on Spot Instances to save costs.
   * **Design:** Use Spot Fleet or ASG Mixed Instances Policy (Spot + On-Demand base) for workloads that are fault-tolerant, checkpoint-capable, diversified across AZs/instance types, and not latency-sensitive. Because Spot instances can be interrupted with a 2-minute warning, you should never run 100% Spot for critical production without failover.
