@@ -1,554 +1,372 @@
-# Amazon EC2 – Instance Storage (EBS, EFS, Instance Store)
+# Amazon EC2 — Instance Storage: EBS, EFS, & Instance Store (Engineering Architect Guide)
+
 > 📚 Official Docs: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Storage.html  
-> 🎯 SAA-C03 Exam Weight: High — many scenario questions about storage choice
+> 🎯 SAA-C03 Exam Weight: High — core architectural choices for data persistence, read/write performance, caching, and state management.
 
 ---
 
-## 🗂️ Storage Options Overview
+## 🗂️ Topic 1: Elastic Block Store (EBS) Core Concepts & SSD Volumes
 
-When you run an EC2 instance, you have three fundamentally different ways to store data. Understanding the difference is crucial:
+### 📖 Technical Specifications & AWS Core Concepts
+* **EBS (Elastic Block Store):** A network-attached block storage service designed for use with Amazon EC2 instances. It provides persistent, high-performance block storage volumes.
+* **Block Storage:** A storage paradigm where data is split into evenly sized blocks, each with a unique identifier, allowing fast, random access (ideal for databases and OS drives).
+* **Availability Zone (AZ) Lock:** EBS volumes are created within a specific AZ and are inherently redundant within that AZ. They cannot be attached directly to an instance in a different AZ.
+* **gp3 (General Purpose SSD v3):** The default SSD volume type offering baseline performance of 3,000 IOPS and 125 MB/s throughput, allowing IOPS and throughput to be provisioned independently of storage capacity.
+* **gp2 (General Purpose SSD v2):** An older SSD volume type where performance is directly linked to size (3 IOPS per GB), meaning larger capacities must be provisioned to achieve higher performance.
+* **io2 Block Express / io1 (Provisioned IOPS SSD):** High-performance SSD volume types designed for I/O-intensive database and enterprise applications. io2 Block Express offers sub-millisecond latency and up to 256,000 IOPS.
+* **Multi-Attach:** An EBS feature (supported only on io1/io2 SSDs) that allows mounting a single volume to up to 16 Nitro EC2 instances simultaneously within the **same** Availability Zone.
+* **Delete on Termination:** An attribute that determines whether an EBS volume is automatically deleted when its attached EC2 instance is terminated. (Default is `true` for root volumes, `false` for non-root data volumes).
 
-```
-Storage Options for EC2:
-┌────────────────────────────────────────────────────────────┐
-│                                                            │
-│  1. EBS Volume  ─── Network-attached block storage         │
-│     (like plugging in an external hard drive over network) │
-│                                                            │
-│  2. Instance Store ─── Physical disk on the host server    │
-│     (like the internal SSD of your laptop)                 │
-│                                                            │
-│  3. EFS ─── Shared network file system                     │
-│     (like a NAS drive that multiple servers can mount)     │
-└────────────────────────────────────────────────────────────┘
+---
+
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** Why choose gp3 over gp2, and how do they differ in cost and performance tuning?**
+  * **Design:** * **Independent Scaling:** With `gp3`, you can scale IOPS and throughput independently of storage size. With `gp2`, performance is bound to size (3 IOPS per GB). If a database needs 6,000 IOPS but only 100 GB of data, `gp2` forces you to provision a 2,000 GB volume (wasted cost). `gp3` allows you to provision 100 GB and dial up the IOPS to 6,000 separately.
+    * **Cost-Efficiency:** `gp3` is up to 20% cheaper per GB than `gp2`. 
+
+* **Scenario:** When should you choose Provisioned IOPS SSD (io1/io2) instead of General Purpose SSD (gp3)?**
+  * **Design:** Choose Provisioned IOPS when:
+    * You need **more than 16,000 IOPS** (the maximum for `gp3`).
+    * You require extreme write consistency with sub-millisecond latencies (such as large-scale Oracle, Microsoft SQL Server, or SAP HANA databases).
+    * You need **Multi-Attach** to share block storage between clustered instances (e.g., clustered file systems).
+
+* **Scenario:** What are the requirements and constraints of EBS Multi-Attach, and why can't it cross Availability Zones?**
+  * **Design:** * **Constraints:** Multi-Attach only works with `io1` or `io2` volumes, requires Nitro-based instances, and **cannot cross Availability Zones** (it is bound to the physical hardware zone of the volume).
+    * **Cluster File System Requirement:** You *must* use a cluster-aware file system (like GFS2 or OCFS2) at the operating system layer. Standard file systems (like ext4 or XFS) will experience data corruption because they do not coordinate read/write locks across different hosts.
+
+* **Scenario:** Can any EBS volume be used as an EC2 boot volume?**
+  * **Design:** **No.** Only SSD-based volume types (`gp2`, `gp3`, `io1`, `io2`) can be used as boot volumes. HDD-based volumes (`st1`, `sc1`) are restricted from serving as boot devices.
+
+---
+
+### 📐 Application Design Patterns & Trade-offs
+* **Shared Storage Architecture: Clustered Block Storage (EBS Multi-Attach) vs. Distributed File System (EFS):**
+  * **EBS Multi-Attach:** Provides raw, high-performance block-level access to multiple instances in the same AZ. Choose this only when running specialized enterprise clusters (like Oracle RAC or Teradata) that require low-latency raw block writes and have cluster locking systems built into the application layer.
+  * **EFS:** Provides file-level access over standard network protocols (NFS) across multiple AZs. Choose this for standard microservice workloads (e.g., sharing user uploads across a dynamic auto-scaling group of web servers) where ease of management and cross-AZ resilience outweigh raw sub-millisecond disk access.
+
+---
+
+### 💻 Hands-on CLI Commands
+* **Create a gp3 EBS volume (100 GB, custom performance specs):**
+  ```bash
+  aws ec2 create-volume \
+    --availability-zone us-east-1a \
+    --size 100 \
+    --volume-type gp3 \
+    --iops 3000 \
+    --throughput 125 \
+    --encrypted
+  ```
+* **Create an io2 EBS volume (500 GB, 20,000 IOPS):**
+  ```bash
+  aws ec2 create-volume \
+    --availability-zone us-east-1a \
+    --size 500 \
+    --volume-type io2 \
+    --iops 20000 \
+    --encrypted
+  ```
+* **Attach an EBS volume to an EC2 instance:**
+  ```bash
+  aws ec2 attach-volume \
+    --volume-id vol-0abc123def456 \
+    --instance-id i-1234567890abcdef0 \
+    --device /dev/sdf
+  ```
+* **Modify volume configuration in-place (no downtime):**
+  ```bash
+  aws ec2 modify-volume \
+    --volume-id vol-0abc123def456 \
+    --size 200 \
+    --volume-type gp3 \
+    --iops 6000
+  ```
+
+---
+
+## 💾 Topic 2: EBS HDD Volumes & Storage Selection Decisions
+
+### 📖 Technical Specifications & AWS Core Concepts
+* **HDD (Hard Disk Drive):** Magnetic platter-based storage optimized for large sequential access, measured primarily by throughput (MB/s) rather than IOPS.
+* **st1 (Throughput Optimized HDD):** A low-cost HDD volume type designed for frequently accessed, throughput-intensive workloads (e.g., big data, log processing).
+* **sc1 (Cold HDD):** The lowest-cost EBS volume type, designed for infrequently accessed workloads with sequential data access patterns.
+
+---
+
+### 🗺️ Visual Architecture: Storage Decision Path
+
+```mermaid
+flowchart TD
+    Start([Evaluate EC2 Storage Requirement]) --> Q1{Need concurrent sharing\nacross multiple hosts/AZs?}
+    
+    Q1 -->|Yes| EFS[Elastic File System - EFS\nNFS, Linux-only, serverless]
+    
+    Q1 -->|No| Q2{Need highest possible IOPS\nand sub-ms disk RTT?}
+    
+    Q2 -->|Yes| InstanceStore[EC2 Instance Store\nNVMe SSD local physical host\nData is EPHEMERAL]
+    
+    Q2 -->|No| Q3{What is the IO pattern?}
+    
+    Q3 -->|Random I/O / DB / Boot| SSD[EBS SSD Tiers]
+    Q3 -->|Sequential / Big Data / Logs| HDD[EBS HDD Tiers]
+    
+    SSD --> Q4{Need >16,000 IOPS\nor Multi-Attach?}
+    Q4 -->|Yes| io2[io2 / io1 Provisioned IOPS]
+    Q4 -->|No| gp3[gp3 General Purpose SSD]
+    
+    HDD --> Q5{Is access frequent?}
+    Q5 -->|Yes| st1[st1 Throughput Optimized]
+    Q5 -->|No| sc1[sc1 Cold HDD]
 ```
 
 ---
 
-## 💾 EBS — Elastic Block Store
-
-### What Is It?
-EBS is a **network-attached block storage device** — like an external hard drive connected over a very fast network. Your instance reads and writes to it over the network (slight latency, but very durable and flexible).
-
-### Key Characteristics
-
-```
-EC2 Instance (AZ: us-east-1a)
-        │
-        │ (network connection — very fast, but network)
-        │
-   ┌────┴────────────────────────────────┐
-   │  EBS Volume (also in us-east-1a)    │
-   │  - 100 GB gp3                       │
-   │  - 3000 IOPS                        │
-   │  - Data survives instance stop!     │
-   └─────────────────────────────────────┘
-```
-
-- **AZ-locked**: EBS volumes are tied to a specific AZ — to use in another AZ, snapshot + restore
-- **One-to-one**: Generally attached to ONE instance at a time (except Multi-Attach on io1/io2)
-- **Persistent**: Data survives instance stop/start and termination (unless "Delete on Termination" is enabled)
-- **Provisioned**: You choose size (GBs) and IOPS upfront
-
-### EBS Volume Types — Deep Dive
-
-#### SSD-based (for random I/O workloads like databases):
-
-**gp3 (General Purpose SSD v3)** — Recommended default
-- Baseline: 3,000 IOPS and 125 MB/s throughput — included in price
-- Can scale up to 16,000 IOPS and 1,000 MB/s **independently** (IOPS and throughput are separate knobs)
-- Size: 1 GB – 16 TB
-- ✅ Use for: Boot volumes, dev/test, small-medium databases
-
-**Create a gp3 EBS volume:**
-```bash
-aws ec2 create-volume \
-  --availability-zone us-east-1a \
-  --size 100 \
-  --volume-type gp3 \
-  --iops 3000 \
-  --throughput 125 \
-  --encrypted \
-  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/mrk-abc123
-```
-
-**gp2 (General Purpose SSD v2)** — Older, still available
-- IOPS **linked to size**: 3 IOPS per GB (so 100 GB = 300 IOPS, max 16,000 IOPS at 5,333 GB)
-- If you need more IOPS, you must increase volume size (wasteful!)
-- ✅ Use for: Same as gp3, but gp3 is better and cheaper
-
-**io2 Block Express / io1 (Provisioned IOPS SSD)** — For demanding workloads
-- io2 Block Express: up to **256,000 IOPS**, sub-millisecond latency
-- io1: up to 64,000 IOPS (on Nitro instances), 32,000 on others
-- IOPS:GB ratio: io1 = 50:1 max; io2 = 500:1 max
-- Supports **Multi-Attach** (mount to multiple EC2 in same AZ)
-- ✅ Use for: Large databases (Oracle, SQL Server), I/O-intensive apps
-
-**Create an io2 EBS volume (high-performance):**
-```bash
-aws ec2 create-volume \
-  --availability-zone us-east-1a \
-  --size 500 \
-  --volume-type io2 \
-  --iops 20000 \
-  --encrypted
-```
-
-#### HDD-based (for sequential I/O workloads like streaming, analytics):
-
-**st1 (Throughput Optimized HDD)**
-- Max 500 MB/s throughput, 500 IOPS
-- ✅ Use for: Big data (Kafka, Hadoop), data warehouses, log processing, ETL
-
-**sc1 (Cold HDD)** — Cheapest EBS
-- Max 250 MB/s, 250 IOPS
-- ✅ Use for: Infrequently accessed data, archival, cost-sensitive workloads
-
-> ⚠️ **Critical rule**: Only gp2, gp3, io1, io2 can be used as **BOOT volumes**. HDD types (st1, sc1) cannot be boot volumes.
-
-**Attach EBS volume to instance:**
-```bash
-aws ec2 attach-volume \
-  --volume-id vol-0abc123def456 \
-  --instance-id i-1234567890abcdef0 \
-  --device /dev/sdf
-```
-
-**Detach EBS volume:**
-```bash
-aws ec2 detach-volume --volume-id vol-0abc123def456
-```
-
-**Describe volumes:**
-```bash
-aws ec2 describe-volumes \
-  --filters "Name=status,Values=available"
-```
-
-**Modify volume (increase size, change type — no downtime):**
-```bash
-aws ec2 modify-volume \
-  --volume-id vol-0abc123def456 \
-  --size 200 \
-  --volume-type gp3 \
-  --iops 6000
-```
-
-**Delete volume (must be detached first):**
-```bash
-aws ec2 delete-volume --volume-id vol-0abc123def456
-```
-
-### EBS Multi-Attach (io1/io2 only)
-
-```
-                    ┌──── EC2 Instance A ────┐
-                    │    (AZ: us-east-1a)    │
-io2 Volume ─────────┤                        │
-(us-east-1a)        └──── EC2 Instance B ────┘
-                         (AZ: us-east-1a)
-
-⚠️ SAME AZ only! Multi-Attach doesn't work across AZs.
-⚠️ Must use cluster-aware file system (not standard ext4 or XFS)
-```
-
-Use case: Achieve higher application availability in clustered Linux apps (e.g., Oracle RAC, Teradata)
-
-### EBS Snapshots
-
-A snapshot is a **point-in-time backup** of your EBS volume, stored in S3.
-
-```
-Snapshot Workflow:
-EBS Volume ──▶ Snapshot (stored in S3, incremental) ──▶ Restore to new EBS in any AZ/Region
-                    │
-                    ├── Copy to another region (for DR)
-                    ├── Share with other AWS accounts
-                    └── Create AMI from snapshot
-```
-
-**Snapshot Features:**
-- **Incremental**: Only changed blocks since last snapshot are saved (efficient!)
-- **EBS Snapshot Archive**: Move snapshot to archive tier → 75% cheaper, but 24–72h to restore
-- **Recycle Bin**: Protect snapshots from accidental deletion; set retention 1 day–1 year
-- **Fast Snapshot Restore (FSR)**: Pay extra to eliminate latency on first use of restored volume
-
-**Create a snapshot:**
-```bash
-aws ec2 create-snapshot \
-  --volume-id vol-0abc123def456 \
-  --description "Backup before upgrade"
-```
-
-**Create snapshot with tags:**
-```bash
-aws ec2 create-snapshot \
-  --volume-id vol-0abc123def456 \
-  --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=db-backup-2026-03-06}]'
-```
-
-**List snapshots (owned by me):**
-```bash
-aws ec2 describe-snapshots \
-  --owner-ids self
-```
-
-**Copy snapshot to another region (for DR):**
-```bash
-aws ec2 copy-snapshot \
-  --source-region us-east-1 \
-  --source-snapshot-id snap-0abc123def456 \
-  --destination-region eu-west-1 \
-  --description "DR copy"
-```
-
-**Restore volume from snapshot:**
-```bash
-aws ec2 create-volume \
-  --snapshot-id snap-0abc123def456 \
-  --availability-zone us-east-1a \
-  --volume-type gp3
-```
-
-**Delete snapshot:**
-```bash
-aws ec2 delete-snapshot --snapshot-id snap-0abc123def456
-```
-
-**Enable snapshot recycle bin (protect from accidental deletion):**
-```bash
-aws rbin create-rule \
-  --retention-period Value=7,Unit=DAYS \
-  --resource-type EBS_SNAPSHOT \
-  --description "7-day EBS snapshot retention"
-```
-
-**Fast Snapshot Restore (FSR) for immediate performance:**
-```bash
-aws ec2 enable-fast-snapshot-restores \
-  --availability-zones us-east-1a us-east-1b \
-  --source-snapshot-ids snap-0abc123def456
-```
-
-### EBS Encryption
-
-**Enable EBS encryption by default for account/region:**
-```bash
-aws ec2 enable-ebs-encryption-by-default --region us-east-1
-```
-
-**Check if default encryption is enabled:**
-```bash
-aws ec2 get-ebs-encryption-by-default
-```
-
-**Create encrypted copy of unencrypted snapshot:**
-```bash
-aws ec2 copy-snapshot \
-  --source-region us-east-1 \
-  --source-snapshot-id snap-UNENCRYPTED \
-  --encrypted \
-  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/mrk-abc123
-```
-
-> 🔗 EBS docs: https://docs.aws.amazon.com/ebs/latest/userguide/what-is-ebs.html
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** Why choose st1 over sc1 for data processing workloads (like Hadoop or Kafka)?**
+  * **Design:** * `st1` provides double the maximum throughput (500 MB/s) compared to `sc1` (250 MB/s). 
+    * Big data framework clusters (like MapReduce, Kafka, and Hadoop) read and write massive sequential datasets where raw throughput is the primary performance bottleneck. `sc1` is too slow for active processing and should only be used as a cold archive tier.
 
 ---
 
-## ⚡ EC2 Instance Store — Blazing Fast Temporary Storage
-
-**What is it?** A physical disk directly attached to the host server — the hardware the EC2 instance runs on. No network involved, so performance is phenomenal.
-
-```
-Server Hardware (Physical)
-┌───────────────────────────────────────── ─┐
-│  CPU    RAM    [NVMe SSD — Instance Store]│
-│                    │                      │
-│              EC2 Instance                 │
-└──────────────────────────────────────── ──┘
-```
-
-**The trade-off:**
-| Aspect | Instance Store |
-|--------|---------------|
-| **Performance** | Millions of IOPS — fastest possible |
-| **Durability** | ⚠️ **EPHEMERAL** — data lost on stop, termination, or hardware failure |
-| **Size** | Fixed (depends on instance type) |
-| **Cost** | Included in instance price |
-
-**When to use it:**
-- Buffer or cache (you can rebuild the data)
-- Temporary scratch space for processing (e.g., Spark intermediate results)
-- When you need the absolute highest IOPS (databases with custom replication)
-
-> ⚠️ **Never use Instance Store for anything you can't afford to lose!** Backup to S3 or EBS if you need persistence.
+### 📐 Application Design Patterns & Trade-offs
+* **EBS Throughput Throttling & Burst Balance Design:**
+  * **The Challenge:** HDD volumes (`st1`, `sc1`) and older SSD volumes (`gp2`) rely on an **I/O credit system** (Burst Balance). Under heavy load (e.g., running an overnight ETL batch job), the volume consumes credit. Once credit hits 0%, performance drops to baseline, causing application queues to back up and API timeouts to occur.
+  * **The Architectural Pattern:** Design application data ingestion to use **rate-limiting or buffering** (via SQS or Kinesis) to prevent sudden, sustained I/O spikes from exhausting the EBS burst balance. If the workload has constant, high throughput demands, upgrade the volume to `gp3` or `io2`, where throughput and IOPS can be statically provisioned without relying on dynamic burst credits.
 
 ---
 
-## 📂 EFS — Elastic File System
-
-### What Is It?
-
-EFS is a **managed NFS (Network File System)**. Unlike EBS (one-to-one), EFS can be mounted by **hundreds of EC2 instances simultaneously, across multiple AZs**.
-
-```
-              ┌──────────────────────────────┐
-              │          EFS (NFS)           │
-              │  Scales automatically        │
-              │  Multi-AZ, highly available  │
-              └──────┬──────┬──────┬─────────┘
-                     │      │      │
-              EC2 A  │   EC2 B  EC2 C
-            (AZ-1a)  │  (AZ-1b)  (AZ-1c)
-                     │
-            All share the same files!
-```
-
-### Key Characteristics
-- **Linux only** (not Windows) — uses NFS v4 protocol
-- **Pay per GB used** (not provisioned) — scales automatically from GB to petabytes
-- Highly available (multi-AZ), highly durable (11 nines)
-- ~3x more expensive than gp2 EBS
-- Uses a Security Group to control access
-
-**Create an EFS file system:**
-```bash
-aws efs create-file-system \
-  --performance-mode generalPurpose \
-  --throughput-mode bursting \
-  --encrypted \
-  --tags Key=Name,Value=my-shared-fs
-```
-
-**Create an EFS mount target (one per AZ):**
-```bash
-aws efs create-mount-target \
-  --file-system-id fs-0abc123def456 \
-  --subnet-id subnet-0abc123def456 \
-  --security-groups sg-0abc123def456
-```
-
-**Create a second mount target in another AZ:**
-```bash
-aws efs create-mount-target \
-  --file-system-id fs-0abc123def456 \
-  --subnet-id subnet-0def456abc123 \
-  --security-groups sg-0abc123def456
-```
-
-**Describe file systems:**
-```bash
-aws efs describe-file-systems
-```
-
-**Describe mount targets:**
-```bash
-aws efs describe-mount-targets \
-  --file-system-id fs-0abc123def456
-```
-
-**Mount EFS on EC2 (from inside the instance, using NFS):**
-```bash
-sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport \
-  fs-0abc123def456.efs.us-east-1.amazonaws.com:/ /mnt/efs
-```
-
-**Mount EFS on EC2 (using EFS mount helper — amazon-efs-utils):**
-```bash
-sudo mount -t efs -o tls fs-0abc123def456:/ /mnt/efs
-```
-
-**Create EFS access point (for container workloads):**
-```bash
-aws efs create-access-point \
-  --file-system-id fs-0abc123def456 \
-  --posix-user Uid=1001,Gid=1001 \
-  --root-directory Path=/app-data,CreationInfo={OwnerUid=1001,OwnerGid=1001,Permissions=755}
-```
-
-**Enable lifecycle management (move to IA after 30 days):**
-```bash
-aws efs put-lifecycle-configuration \
-  --file-system-id fs-0abc123def456 \
-  --lifecycle-policies TransitionToIA=AFTER_30_DAYS
-```
-
-**Delete EFS file system (delete mount targets first):**
-```bash
-aws efs delete-mount-target --mount-target-id fsmt-0abc123def456
-aws efs delete-file-system --file-system-id fs-0abc123def456
-```
-
-### EFS Storage Classes
-
-EFS has tiers, similar to S3:
-
-| Tier | Access | Cost |
-|------|--------|------|
-| EFS Standard | Frequent access | $$$ |
-| EFS Standard-IA | Infrequent access | $ (up to 92% cheaper) |
-| EFS One Zone | Frequent, single AZ | $$ |
-| EFS One Zone-IA | Infrequent, single AZ | Cheapest |
-
-**EFS Lifecycle Management**: Automatically moves files to IA tier after N days of no access (configurable: 7, 14, 30, 60, 90 days).
-
-### EFS Performance Modes
-
-| Mode | When to Use |
-|------|-------------|
-| General Purpose (default) | Latency-sensitive: web serving, CMS |
-| Max I/O | Scale to higher levels of aggregate throughput: big data, media processing |
-
-### EFS Throughput Modes
-
-| Mode | Description |
-|------|-------------|
-| Bursting | Throughput scales with file system size (like t-class EC2) |
-| Provisioned | Set throughput regardless of storage size |
-| Elastic | Auto-scales throughput based on workload (recommended) |
-
-> 🔗 EFS docs: https://docs.aws.amazon.com/efs/latest/ug/whatisefs.html
+### 💻 Hands-on CLI Commands
+* **Describe volume configurations and performance details:**
+  ```bash
+  aws ec2 describe-volumes \
+    --filters "Name=status,Values=available" \
+    --query 'Volumes[*].[VolumeId,VolumeType,Size,Iops,Throughput]'
+  ```
 
 ---
 
-## 🆚 EBS vs EFS vs Instance Store — The Comparison
+## 🔄 Topic 3: EBS Snapshots, Data Life Cycle, & Encryption
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│              EC2 Storage Decision Guide                                  │
-│                                                                          │
-│  Need shared storage across instances/AZs?                               │
-│       YES ──▶ EFS (NFS, Linux, multi-AZ, auto-scale)                    │
-│       NO  ──▶ Continue below                                             │
-│                                                                          │
-│  Need MAXIMUM performance (millions of IOPS)?                            │
-│       YES ──▶ Instance Store (but data is ephemeral!)                   │
-│       NO  ──▶ Continue below                                             │
-│                                                                          │
-│  Need persistent block storage?                                          │
-│       Single instance, random I/O (DB, boot) ──▶ gp3 or io2 (EBS)      │
-│       Sequential I/O (streaming, ETL)         ──▶ st1 (EBS)             │
-│       Rarely accessed archive                 ──▶ sc1 (EBS)             │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-| Feature | EBS | EFS | Instance Store |
-|---------|-----|-----|----------------|
-| **Attach to** | 1 instance (io1/io2: multi) | Many instances, multi-AZ | 1 instance only |
-| **AZ scope** | 1 AZ | Multi-AZ | Physical host |
-| **Persistence** | ✅ Persistent | ✅ Persistent | ❌ Ephemeral |
-| **Performance** | Good (network) | Good (network) | Best (physical) |
-| **Pricing** | Per GB provisioned | Per GB used | Included |
-| **OS support** | Linux + Windows | Linux only | Linux + Windows |
-| **Use case** | Boot volumes, DBs | Shared web content, home dirs | Cache, temp |
+### 📖 Technical Specifications & AWS Core Concepts
+* **EBS Snapshot:** A point-in-time, incremental backup of an EBS volume that is stored durably in Amazon S3.
+* **Incremental Backup:** A backup strategy where only the data blocks that have changed since the most recent snapshot are copied, saving storage space and costs.
+* **Snapshot Archive:** A low-cost storage tier for EBS snapshots that are accessed infrequently (at least 90 days). It reduces storage costs by up to 75% but requires 24 to 72 hours to restore.
+* **Fast Snapshot Restore (FSR):** An EBS capability that allows you to instantly restore a volume from a snapshot with full provisioned performance, eliminating the latency overhead of block initialization.
+* **Recycle Bin:** A resource recovery feature that protects EBS snapshots and AMIs from accidental deletion by retaining them for a user-specified retention window.
 
 ---
 
-## ⭐ Interview Tips & Key Points to Remember
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** How does the incremental nature of EBS snapshots affect data restore times, and how does FSR solve this?**
+  * **Design:** * **The Problem (Lazy Loading):** When you restore an EBS volume from a standard snapshot, the blocks are pulled from S3 "on-demand" when first read. This causes a significant performance penalty (latency spike) during the first access of each block (known as "pre-warming" lag).
+    * **The Solution (FSR):** Enabling Fast Snapshot Restore ensures the restored EBS volume is instantly fully instantiated with maximum provisioned performance out of the gate. FSR is billed per hour per AZ.
 
-- **EBS is AZ-locked** — snapshot it first if you want to move to another AZ/region
-- **Only SSD types (gp2, gp3, io1, io2) can be boot volumes** — HDD (st1, sc1) cannot
-- **gp3 > gp2**: gp3 lets you tune IOPS and throughput independently; gp3 is cheaper too
-- **io2 Block Express**: up to 256,000 IOPS — for the most demanding databases
-- **Multi-Attach (io1/io2 only)**: same AZ, cluster-aware file system required
-- **Instance Store = ephemeral** — fastest possible, but data gone on stop/terminate
-- **EFS = shared NFS, Linux only, pay per use** (not provisioned), auto-scales
-- **EFS ~3x more expensive than EBS gp2** but needed for shared/multi-AZ scenarios
-- **EFS-IA** can save up to 92% for infrequently accessed files (automatic tiering)
-- **EBS snapshots are incremental** (only changed blocks saved after first snapshot)
-- **Snapshot Archive** = 75% cheaper, but takes 24–72h to restore — plan ahead
-- Scenario: "need 100 EC2 instances to share files across AZs" → **EFS**, not EBS
+* **Scenario:** How do you migrate an EBS volume from one Availability Zone (AZ) or Region to another?**
+  * **Design:** 1. Create an EBS Snapshot of the target volume in its source AZ.
+    2. If moving to a different region: Copy the snapshot to the destination region.
+    3. Restore the snapshot into a new EBS volume in the target AZ/Region.
+
+* **Scenario:** If an EBS snapshot is unencrypted, how can you restore it to a new, encrypted EBS volume?**
+  * **Design:** You cannot encrypt an existing snapshot in-place. The correct architectural path is:
+    1. Perform a copy of the unencrypted snapshot.
+    2. During the copy process, enable the `Encrypted` flag and specify your KMS Key ID.
+    3. Restore a new EBS volume from the newly created, encrypted snapshot.
 
 ---
 
-## Quick Reference — AWS CLI Commands
+### 📐 Application Design Patterns & Trade-offs
+* **Pre-Warming Block Volumes vs. FSR for Dynamic Scaled Containers:**
+  * **The Scenario:** You run microservices inside containers (ECS/EKS) that mount restored database volumes dynamically upon scaling.
+  * **Standard Pre-warming (FIO/DD):** Running `dd` or `fio` commands on instance boot reads all blocks to pre-warm them from S3. This forces the instance to sit idle for minutes, delaying autoscaling response and increasing response times.
+  * **FSR Pattern:** Architect the scaling pipeline to utilize FSR-enabled snapshots. While more expensive, FSR enables instant storage instantiation. This permits the newly launched app instance to begin serving requests immediately at full disk speeds, preventing scaling delays.
 
-### EBS Volumes
-```bash
-# Create gp3 EBS volume
-aws ec2 create-volume --availability-zone us-east-1a --size 100 --volume-type gp3 --iops 3000 --throughput 125 --encrypted
+---
 
-# Create io2 EBS volume
-aws ec2 create-volume --availability-zone us-east-1a --size 500 --volume-type io2 --iops 20000 --encrypted
+### 🚀 Real-World Production Insights
+* **The Lazy Loading Outage Trap:**
+  * **The Scenario:** A production database volume crashes. You restore the volume from a 2 TB EBS snapshot and bring the database online immediately.
+  * **The Outage:** As users request data, the database query threads block because EBS is pulling block-level data from S3 on demand. Query latency spikes from 1ms to 200ms, backing up connection pools and causing a total application freeze (cascading timeout failures).
+  * **Mitigation:** If recovery speed is critical, use **Fast Snapshot Restore (FSR)**. FSR guarantees the blocks are pre-loaded at the AWS hardware layer, bypassing the lazy-loading process entirely. If FSR is not enabled, your deployment pipeline must execute a pre-warming run (e.g. `dd if=/dev/xvdf of=/dev/null bs=1M`) to load all blocks before pointing the application load balancer to the new server.
 
-# Attach EBS volume
-aws ec2 attach-volume --volume-id vol-0abc123def456 --instance-id i-1234567890abcdef0 --device /dev/sdf
+---
 
-# Detach EBS volume
-aws ec2 detach-volume --volume-id vol-0abc123def456
+### 💻 Hands-on CLI Commands
+* **Create an EBS snapshot:**
+  ```bash
+  aws ec2 create-snapshot \
+    --volume-id vol-0abc123def456 \
+    --description "Backup before system upgrade"
+  ```
+* **Copy and encrypt a snapshot to another region:**
+  ```bash
+  aws ec2 copy-snapshot \
+    --source-region us-east-1 \
+    --source-snapshot-id snap-0abc123def456 \
+    --destination-region eu-west-1 \
+    --encrypted \
+    --kms-key-id arn:aws:kms:eu-west-1:123456789012:key/mrk-xyz789
+  ```
+* **Enable EBS encryption by default for your account in a region:**
+  ```bash
+  aws ec2 enable-ebs-encryption-by-default --region us-east-1
+  ```
+* **Enable Fast Snapshot Restore (FSR) for a snapshot in specific AZs:**
+  ```bash
+  aws ec2 enable-fast-snapshot-restores \
+    --availability-zones us-east-1a us-east-1b \
+    --source-snapshot-ids snap-0abc123def456
+  ```
 
-# Describe volumes
-aws ec2 describe-volumes --filters "Name=status,Values=available"
+---
 
-# Modify volume
-aws ec2 modify-volume --volume-id vol-0abc123def456 --size 200 --volume-type gp3 --iops 6000
+## ⚡ Topic 4: EC2 Instance Store (Ephemeral Storage)
 
-# Delete volume
-aws ec2 delete-volume --volume-id vol-0abc123def456
+### 📖 Technical Specifications & AWS Core Concepts
+* **Instance Store:** Physical SSD or HDD storage drives that are directly attached to the host computer hosting your EC2 instance. It provides high-speed local block-level storage.
+* **Ephemeral Storage:** Temporary storage that does not persist data across lifecycle events like instance stop or host termination.
+* **Host Computer:** The physical bare-metal server in an AWS data center on which your virtual EC2 instance is running.
+
+---
+
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** What events cause data loss on an EC2 Instance Store, and what events do NOT?**
+  * **Design:** * **Data is LOST when:**
+      * The instance is **Stopped** (the physical instance is de-allocated from the host server).
+      * The instance is **Terminated**.
+      * The underlying physical drive fails.
+    * **Data is RETAINED when:**
+      * The operating system is **Rebooted** (soft reboot).
+
+* **Scenario:** Under what architectural scenarios should you choose Instance Store instead of EBS, and how do you mitigate risk?**
+  * **Design:** * **Scenarios:** Choose Instance Store when your application needs the absolute lowest latency and highest throughput (millions of IOPS) and can manage data replication itself. Examples include distributed NoSQL databases (Cassandra, MongoDB), temporary caches, scratch space for analytics (Hadoop/Spark), or load balancer buffers.
+    * **Mitigation:** To handle ephemeral drive failures, run your workload in a clustered configuration with peer-to-peer replication (e.g., a 3-node Cassandra ring). If host hardware fails and one node loses its instance store, it can rebuild its data from the remaining cluster nodes upon replacement.
+
+---
+
+### 📐 Application Design Patterns & Trade-offs
+* **Caching Architecture: Local Ephemeral Cache (Instance Store) vs. Distributed Cache (ElastiCache Redis):**
+  * **Local Instance Store Caching:** Extremely fast (millions of IOPS, zero network hop latency). However, it creates **siloed state**. If a user request lands on EC2-A, it cannot access the cache written on EC2-B. Also, stopping the instance destroys the cache, causing a cold-start storm on your database.
+  * **ElastiCache Redis:** Network-attached, creating a unified, shared cache accessed by all application servers. It persists cache state across application restarts and scales independently. **Architectural Choice:** Use local Instance Store for raw scratch files or intermediate processing calculations; use distributed Redis/Memcached for user sessions and query results.
+
+---
+
+## 📂 Topic 5: Elastic File System (EFS)
+
+### 📖 Technical Specifications & AWS Core Concepts
+* **EFS (Elastic File System):** A managed, serverless, elastic network file system based on the NFSv4 protocol that can be shared simultaneously by thousands of EC2 instances and containers.
+* **Mount Target:** An endpoint created in a specific subnet of an Availability Zone that provides an IP address for EC2 instances to connect to the EFS file system.
+* **EFS Access Point:** An application-specific entry point into an EFS file system that enforces POSIX user/group identities and isolates container access to specific directories.
+* **Elastic Throughput Mode:** An EFS throughput mode that automatically adjusts throughput capacity to match your application's read/write activity without provisioning.
+* **Standard Storage Class:** The default EFS storage tier designed for frequently accessed active files.
+* **Infrequent Access (IA) Storage Class:** A low-cost EFS storage tier optimized for files that are not read or written to frequently.
+* **EFS Lifecycle Management:** An automated policy that transitions files to the IA tier if they have not been accessed for a selected period (e.g., 30 days).
+
+---
+
+### 🗺️ Visual Architecture: EFS Shared Mounting Model
+
+```mermaid
+flowchart TD
+    subgraph VPC ["AWS VPC - us-east-1"]
+        EFS[(EFS File System\nShared nfs-v4)]
+        
+        subgraph AZ-A ["Availability Zone A"]
+            SubnetA[Private Subnet A]
+            MountA[EFS Mount Target A\n10.0.1.50]
+            EC2_A1[Web Server A1]
+            EC2_A2[Web Server A2]
+        end
+
+        subgraph AZ-B ["Availability Zone B"]
+            SubnetB[Private Subnet B]
+            MountB[EFS Mount Target B\n10.0.2.50]
+            EC2_B1[Web Server B1]
+            EC2_B2[Web Server B2]
+        end
+        
+        EFS <--> MountA
+        EFS <--> MountB
+        
+        MountA <--> EC2_A1
+        MountA <--> EC2_A2
+        MountB <--> EC2_B1
+        MountB <--> EC2_B2
+    end
 ```
 
-### EBS Snapshots
-```bash
-# Create snapshot
-aws ec2 create-snapshot --volume-id vol-0abc123def456 --description "Backup before upgrade"
+---
 
-# Create snapshot with tags
-aws ec2 create-snapshot --volume-id vol-0abc123def456 --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=db-backup}]'
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** When should you choose EFS instead of EBS, and what are the major limitations?**
+  * **Design:** * **Why choose EFS:** Choose EFS when you need a shared, highly available file system that can be mounted by **multiple servers concurrently across different Availability Zones (AZs)** (e.g., a clustered web server farm like WordPress, shared user home directories, or persistent container volumes).
+    * **Limitations:** 
+      * **OS:** EFS natively supports **Linux only** (does not support Windows Server).
+      * **Cost:** It is roughly 3x more expensive per GB than EBS.
+      * **Latency:** Because EFS is network-attached over NFS, it has higher latency (1-10ms) than local EBS drives (sub-ms), making it unsuitable for database engines.
 
-# List snapshots
-aws ec2 describe-snapshots --owner-ids self
+* **Scenario:** How do EFS Performance Modes (General Purpose vs. Max I/O) and Throughput Modes affect scaling and billing?**
+  * **Design:** * **Performance Modes:**
+      * **General Purpose (Default):** Best for latency-sensitive applications (web servers, CMS).
+      * **Max I/O:** Best for big data parallel processing (e.g., media rendering, massive scale analytical jobs) where you can scale to tens of thousands of operations per second but accept slightly higher latency.
+    * **Throughput Modes:**
+      * **Elastic (Recommended):** Best for unpredictable workloads. You pay strictly for the throughput consumed.
+      * **Provisioned:** Best for workloads with high throughput demands but low storage capacity.
 
-# Copy snapshot to another region
-aws ec2 copy-snapshot --source-region us-east-1 --source-snapshot-id snap-0abc123def456 --destination-region eu-west-1
+* **Scenario:** How do EFS Access Points help containerized workloads (like ECS Fargate or EKS)?**
+  * **Design:** Containers often run with random root or non-root user IDs. 
+    * An Access Point overrides the container's user identity with a fixed POSIX UID/GID.
+    * It enforces a directory root (e.g., `/app-data`), preventing a container from accessing or deleting files in other directories on the shared file system.
 
-# Restore volume from snapshot
-aws ec2 create-volume --snapshot-id snap-0abc123def456 --availability-zone us-east-1a --volume-type gp3
+---
 
-# Delete snapshot
-aws ec2 delete-snapshot --snapshot-id snap-0abc123def456
+### 📐 Application Design Patterns & Trade-offs
+* **Decoupling State: Shared File System (EFS) vs. Object Storage (S3 API):**
+  * **The Scenario:** You are designing a document-sharing web application.
+  * **EFS Integration:** The application writes files directly to `/mnt/efs/` using standard OS file system APIs (`java.io.File`, `open()`, etc.).
+    * *Pros:* Requires no code changes to legacy software.
+    * *Cons:* Elevated storage cost ($0.30/GB), lock contention if multiple servers write to the same file, and tight coupling to the host file system.
+  * **S3 API Integration:** The application writes files using the AWS SDK (`s3.putObject()`).
+    * *Pros:* Scales infinitely, cost-effective ($0.023/GB), handles lifecycle tiering, and enables direct secure user downloads via presigned URLs.
+    * *Cons:* Requires rewriting application code to use S3 APIs instead of traditional file system writes.
+  * **Architectural Decision:** For modern application design, **always prefer S3 over EFS** to achieve better horizontal scaling, lower costs, and clean API-driven state management.
 
-# Enable snapshot recycle bin
-aws rbin create-rule --retention-period Value=7,Unit=DAYS --resource-type EBS_SNAPSHOT
+---
 
-# Enable Fast Snapshot Restore
-aws ec2 enable-fast-snapshot-restores --availability-zones us-east-1a us-east-1b --source-snapshot-ids snap-0abc123def456
-```
+### 🚀 Real-World Production Insights
+* **The EFS NFS Lock Freeze Outage:**
+  * **The Failure:** You deploy a cluster of 50 Java microservice containers sharing a single EFS Standard file system. Under peak traffic load, they aggressively write logs or temporary transactional directories to the same EFS folder.
+  * **The Behavior:** The system experiences a complete freeze: all threads hang, and the web tier drops connections. 
+  * **The Cause:** **NFS File Lock Overhead**. The NFS protocol uses stateful locks to coordinate writes across multiple nodes. When multiple servers write to the same file directory concurrently, NFS lock serialization causes threads to wait. This cascades across the servers, exhausting the Tomcat/JVM thread pool in seconds.
+  * **Mitigation:** Never write active logs or high-write temporary files (scratch folders) to a shared EFS. Force containers to write logs to local `/tmp` (ephemeral container space) and use log collectors (FluentBit) to ship them out-of-band to CloudWatch or ElasticSearch.
 
-### EBS Encryption
-```bash
-# Enable default encryption
-aws ec2 enable-ebs-encryption-by-default --region us-east-1
+---
 
-# Check default encryption status
-aws ec2 get-ebs-encryption-by-default
-
-# Copy and encrypt snapshot
-aws ec2 copy-snapshot --source-region us-east-1 --source-snapshot-id snap-UNENCRYPTED --encrypted
-```
-
-### EFS File System
-```bash
-# Create EFS
-aws efs create-file-system --performance-mode generalPurpose --throughput-mode bursting --encrypted
-
-# Create mount target
-aws efs create-mount-target --file-system-id fs-0abc123def456 --subnet-id subnet-0abc123def456 --security-groups sg-0abc123def456
-
-# Describe file systems
-aws efs describe-file-systems
-
-# Describe mount targets
-aws efs describe-mount-targets --file-system-id fs-0abc123def456
-
-# Create access point
-aws efs create-access-point --file-system-id fs-0abc123def456 --posix-user Uid=1001,Gid=1001
-
-# Enable lifecycle management
-aws efs put-lifecycle-configuration --file-system-id fs-0abc123def456 --lifecycle-policies TransitionToIA=AFTER_30_DAYS
-
-# Delete mount target
-aws efs delete-mount-target --mount-target-id fsmt-0abc123def456
-
-# Delete EFS
-aws efs delete-file-system --file-system-id fs-0abc123def456
-```
+### 💻 Hands-on CLI Commands
+* **Create an encrypted EFS file system with Elastic throughput:**
+  ```bash
+  aws efs create-file-system \
+    --performance-mode generalPurpose \
+    --throughput-mode elastic \
+    --encrypted \
+    --tags Key=Name,Value=web-shared-assets
+  ```
+* **Create EFS mount targets (one per AZ):**
+  ```bash
+  aws efs create-mount-target \
+    --file-system-id fs-0abc123def456 \
+    --subnet-id subnet-0abc123def456 \
+    --security-groups sg-0abc123def456
+  ```
+* **Configure lifecycle policies to shift old files to Standard-IA:**
+  ```bash
+  aws efs put-lifecycle-configuration \
+    --file-system-id fs-0abc123def456 \
+    --lifecycle-policies TransitionToIA=AFTER_30_DAYS
+  ```
+* **Create an EFS Access Point to enforce permissions:**
+  ```bash
+  aws efs create-access-point \
+    --file-system-id fs-0abc123def456 \
+    --posix-user Uid=1001,Gid=1001 \
+    --root-directory Path=/app-data,CreationInfo={OwnerUid=1001,OwnerGid=1001,Permissions=755}
+  ```

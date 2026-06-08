@@ -1,393 +1,210 @@
-# Amazon EC2 – Associate Level Concepts
+# Amazon EC2 – Associate Level Concepts (Placement, ENI, Hibernate)
 > 📚 Official Docs: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/  
-> 🎯 These topics separate associate-level understanding from beginner
+> 🎯 SAA-C03 Exam Weight: Medium — tests depth beyond basic EC2 deployments.
 
 ---
 
-## 📦 EC2 Placement Groups — Control Where Instances Live
+## 📦 Topic 1: EC2 Placement Groups
 
-By default, AWS places your instances wherever it finds capacity. But for certain workloads, you want control. Placement Groups let you influence how EC2 instances are physically placed on AWS hardware.
+### 📖 Technical Specifications & AWS Core Concepts
+* **Placement Groups:** A logical grouping of instances within a single AWS Region that allows you to influence the underlying hardware placement.
+* **Cluster Placement Group:** Packs instances close together inside a single Availability Zone. Delivers ultra-low latency and 10 Gbps+ network throughput.
+* **Spread Placement Group:** Strictly places each instance on distinct underlying hardware (distinct racks, network, and power source). Hard limit of **7 instances per AZ**.
+* **Partition Placement Group:** Divides the group into logical segments called partitions. Instances in one partition do not share hardware with instances in other partitions. Up to 7 partitions per AZ, but can contain hundreds of instances.
 
-There are **3 types**, each optimized for a different goal:
+---
 
-### 1. 🔗 Cluster Placement Group — "All Together, Super Fast"
+### 🗺️ Visual Architecture: Placement Strategies
 
-```
-┌────────────────── Single AZ ──────────────────────┐
-│  ┌──────────────── Same Rack ──────────────────┐  │
-│  │  [EC2] ──10Gbps──[EC2] ──10Gbps──[EC2]      │  │
-│  │  [EC2] ──10Gbps──[EC2] ──10Gbps──[EC2]      │  │
-│  └─────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────┘
-```
+```mermaid
+graph TD
+    subgraph Cluster_PG [Cluster Placement Group - Max Performance]
+        direction LR
+        EC2_C1[EC2] <-->|10 Gbps| EC2_C2[EC2]
+        EC2_C2 <-->|10 Gbps| EC2_C3[EC2]
+    end
 
-- All instances on the **same rack in the same AZ**
-- Ultra-low network latency + high bandwidth (up to 10 Gbps between instances)
-- **Risk**: If the rack fails, ALL instances fail simultaneously
-- **Use cases**: HPC (High Performance Computing), big data jobs that need low-latency inter-node communication, scientific simulations
+    subgraph Spread_PG [Spread Placement Group - Max Safety]
+        direction LR
+        Rack1[Rack A: EC2]
+        Rack2[Rack B: EC2]
+        Rack3[Rack C: EC2]
+    end
 
-> 💡 Analogy: A cluster group is like putting all your servers in a single room — lightning fast communication between them, but if the room catches fire, everything's gone.
-
-**Create a Cluster placement group:**
-```bash
-aws ec2 create-placement-group \
-  --group-name my-cluster-pg \
-  --strategy cluster
-```
-
-### 2. 📊 Spread Placement Group — "Isolated for Safety"
-
-```
-┌── AZ-1 ──┐  ┌── AZ-1 ──┐  ┌── AZ-2 ──┐  ┌── AZ-3 ──┐
-│  Rack A  │  │  Rack B  │  │  Rack C  │  │  Rack D  │
-│  [EC2-1] │  │  [EC2-2] │  │  [EC2-3] │  │  [EC2-4] │
-└──────────┘  └──────────┘  └──────────┘  └──────────┘
-     └──different physical hardware──┘
-```
-
-- Each instance is on a **different physical rack** (different hardware, power, network)
-- Maximum **7 instances per AZ** per placement group (hard limit!)
-- Can span multiple AZs
-- **Risk** if one rack fails: only 1 instance affected — others safe
-- **Use cases**: Critical apps where you can't afford multiple failures (e.g., 3-node Zookeeper cluster, primary-secondary databases)
-
-> ⚠️ **The 7-instance limit per AZ is a very common exam question!**
-
-**Create a Spread placement group:**
-```bash
-aws ec2 create-placement-group \
-  --group-name my-spread-pg \
-  --strategy spread
-```
-
-### 3. 🗂️ Partition Placement Group — "Distributed Systems"
-
-```
-┌──────────────────── AZ (e.g., us-east-1a) ────────────────────┐
-│                                                               │
-│  Partition 1     Partition 2     Partition 3                  │
-│  (Rack set A)    (Rack set B)    (Rack set C)                 │
-│  ┌─────────┐    ┌─────────┐    ┌─────────┐                    │
-│  │ EC2     │    │ EC2     │    │ EC2     │                    │
-│  │ EC2     │    │ EC2     │    │ EC2     │                    │
-│  │ EC2     │    │ EC2     │    │ EC2     │                    │
-│  └─────────┘    └─────────┘    └─────────┘                    │
-│  partitions don't share racks with each other                 │
-└───────────────────────────────────────────────────────────────┘
-```
-
-- Up to **7 partitions per AZ**, each partition = its own set of racks
-- **100s of EC2 instances** can be in one group
-- If partition 1 fails, partitions 2 and 3 are unaffected
-- EC2 instances know which partition they're in (via metadata API) — useful for rack-aware distributed systems
-- **Use cases**: HDFS, HBase, Cassandra, Kafka — distributed systems that need rack awareness
-
-**Create a Partition placement group:**
-```bash
-aws ec2 create-placement-group \
-  --group-name my-partition-pg \
-  --strategy partition \
-  --partition-count 3
-```
-
-### Quick Comparison
-
-| | Cluster | Spread | Partition |
-|--|---------|--------|-----------|
-| Goal | Performance | Safety | Distributed scale |
-| Instances per AZ | No limit | **Max 7** | 100s |
-| Spans AZs? | No (single AZ) | Yes | Yes |
-| Failure impact | All at once | 1 at a time | 1 partition |
-| Use case | HPC, low latency | Critical apps | Hadoop, Cassandra |
-
-**Launch instance into a Cluster placement group:**
-```bash
-aws ec2 run-instances \
-  --image-id ami-0abcdef1234567890 \
-  --instance-type c5n.18xlarge \
-  --placement '{"GroupName": "my-cluster-pg"}' \
-  --count 1
-```
-
-**Describe placement groups:**
-```bash
-aws ec2 describe-placement-groups
-```
-
-**Delete placement group (must be empty):**
-```bash
-aws ec2 delete-placement-group --group-name my-cluster-pg
+    subgraph Partition_PG [Partition Placement Group - Distributed Systems]
+        direction TB
+        Part1[Partition 1: EC2 x10]
+        Part2[Partition 2: EC2 x10]
+    end
 ```
 
 ---
 
-## 🌐 Elastic Network Interfaces (ENI) — Virtual Network Cards
-
-An ENI is a **virtual network card** you can attach to EC2 instances. When you launch an EC2 instance, it automatically gets a primary ENI. But you can create additional ENIs and manage them independently.
-
-### What's Inside an ENI?
-
-```
-┌─────────────────── ENI (eth0) ──────────────────────┐
-│                                                     │
-│  Primary Private IPv4:    10.0.1.15                 │
-│  Secondary Private IPv4:  10.0.1.16 (optional)      │
-│  Elastic IP (public):     54.23.101.5 (optional)    │
-│  Public IPv4:             3.92.155.47 (optional)    │
-│  Security Groups:         [sg-web, sg-db]           │
-│  MAC Address:             0a:12:34:56:78:9a         │
-└─────────────────────────────────────────────────────┘
-```
-
-### Key Properties
-- ENIs are **AZ-bound** — can't move an ENI to a different AZ
-- Can be attached/detached from EC2 instances on-the-fly
-- Moving an ENI carries its private IP, Elastic IP, and MAC address to the new instance
-
-**Create an ENI in a specific subnet:**
-```bash
-aws ec2 create-network-interface \
-  --subnet-id subnet-0abc123def456 \
-  --description "Secondary ENI for app" \
-  --groups sg-0abc123def456
-```
-
-**Attach ENI to EC2 instance (hot attach):**
-```bash
-aws ec2 attach-network-interface \
-  --network-interface-id eni-0abc123def456 \
-  --instance-id i-1234567890abcdef0 \
-  --device-index 1
-```
-
-**Detach ENI from instance:**
-```bash
-aws ec2 detach-network-interface \
-  --attachment-id eni-attach-0abc123def456
-```
-
-**Describe ENIs:**
-```bash
-aws ec2 describe-network-interfaces \
-  --filters "Name=subnet-id,Values=subnet-0abc123def456"
-```
-
-### The Failover Use Case
-
-```
-BEFORE FAILURE:
-EC2-Primary ← [ENI with 10.0.1.15] ← Application connects to 10.0.1.15
-
-PRIMARY FAILS:
-EC2-Primary ✗ (crashed)
-                ↓
-Detach ENI from EC2-Primary
-
-AFTER FAILOVER:
-EC2-Standby ← [Same ENI with 10.0.1.15] ← Application still connects to 10.0.1.15
-```
-
-The application doesn't notice — it's still talking to the same private IP! This is a cheap, simple failover mechanism.
-
-**Move ENI to another instance (detach + reattach):**
-```bash
-# 1. Detach from failed instance
-aws ec2 detach-network-interface --attachment-id eni-attach-OLD
-
-# 2. Attach to new instance (carries same private IP, Elastic IP)
-aws ec2 attach-network-interface \
-  --network-interface-id eni-0abc123def456 \
-  --instance-id i-NEW-INSTANCE-ID \
-  --device-index 1
-```
-
-> 🔗 ENI docs: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** You are deploying a massive Hadoop cluster or Cassandra ring and need to ensure that a single hardware rack failure does not take down multiple data nodes.
+  * **Design:** Deploy a **Partition Placement Group**. It scales to hundreds of instances while physically separating subsets of the cluster into isolated failure domains.
+* **Scenario:** You are running a tightly-coupled High Performance Computing (HPC) financial simulation that requires microsecond inter-node latency.
+  * **Design:** Deploy a **Cluster Placement Group**. It places instances on the same rack in a single AZ to minimize network hops.
+* **Scenario:** You are hosting a 5-node Zookeeper cluster that orchestrates your microservices. Total loss of the cluster would be catastrophic.
+  * **Design:** Deploy a **Spread Placement Group**. It places each instance on a separate physical rack. (It natively supports the 5 nodes since the limit is 7 per AZ).
 
 ---
 
-## 😴 EC2 Hibernate — Pause and Resume Like a Laptop
+### 📐 Application Design Patterns & Trade-offs
+* **Performance vs. Fault Tolerance (Cluster vs. Spread):**
+  * **Cluster:** Optimized for network speed. **Trade-off:** High blast radius. If the rack loses power, the entire HPC job fails simultaneously.
+  * **Spread:** Optimized for independent hardware isolation. **Trade-off:** Limited scale (max 7 per AZ) and no guaranteed ultra-low latency between nodes.
 
-**Normal stop vs hibernate:**
+---
 
-```
-Normal STOP:
-  RAM contents ──── LOST ────
-  EBS volume ─── Preserved
-  Next boot: OS starts fresh (slow)
+### 🚀 Real-World Production Insights
+* **The "Insufficient Capacity" Trap with Clusters:**
+  * **The Problem:** When launching instances into an existing Cluster placement group later in its lifecycle, you frequently encounter `InsufficientInstanceCapacity` errors. This happens because AWS must find contiguous rack space right next to the existing instances, which may no longer be available.
+  * **Mitigation:** Always launch the entire batch of required instances for a Cluster Placement Group simultaneously in a single API call, rather than scaling out incrementally.
 
-HIBERNATE:
-  RAM contents ──── Dumped to encrypted EBS root volume ────▶ Preserved!
-  Next start: RAM restored from EBS, OS resumes instantly (fast!)
-```
+---
 
-Think of it like closing your laptop lid vs turning it off completely.
+### 💻 Hands-on CLI Commands
+* **Create a Spread Placement Group and launch an instance:**
+  ```bash
+  aws ec2 create-placement-group \
+    --group-name my-spread-pg \
+    --strategy spread
+    
+  aws ec2 run-instances \
+    --image-id ami-0abcdef1234567890 \
+    --instance-type m5.large \
+    --placement '{"GroupName": "my-spread-pg"}'
+  ```
 
-### When to Use Hibernate?
-- Long-running processes you don't want to restart
-- Applications with slow initialization (loading ML models, caches, etc.)
-- Services that need fast resume times
+---
 
-### Hibernate Requirements (Constraints for Exam)
-| Constraint | Value |
-|------------|-------|
-| **Max RAM size** | 150 GB |
-| **Max hibernate duration** | 60 days |
-| **Root volume type** | Must be EBS (not Instance Store) |
-| **Root volume encryption** | Must be ENABLED |
-| **Supported purchase types** | On-Demand, Reserved, Spot |
-| **Instance bare metal** | NOT supported |
+## 🌐 Topic 2: Elastic Network Interfaces (ENI) & IP Failover
 
-> ⚠️ Hibernate must be enabled at LAUNCH time — you can't enable it after the instance is already running!
+### 📖 Technical Specifications & AWS Core Concepts
+* **Elastic Network Interface (ENI):** A logical networking component in a VPC that represents a virtual network card.
+* **ENI Attributes:** Holds a primary private IPv4 address, optional secondary IPv4 addresses, an optional Elastic IP (public IP), a MAC address, and one or more Security Groups.
+* **AZ Boundary:** ENIs are strictly bound to a single Availability Zone. They cannot be detached and moved to an instance in a different AZ.
+* **Hot Attach/Detach:** ENIs can be attached or detached from running EC2 instances on-the-fly without requiring a reboot.
 
-**Launch a hibernate-capable instance:**
-```bash
-aws ec2 run-instances \
-  --image-id ami-0abcdef1234567890 \
-  --instance-type m5.large \
-  --hibernation-options Configured=true \
-  --block-device-mappings '[{
-    "DeviceName": "/dev/xvda",
-    "Ebs": {
-      "VolumeSize": 30,
-      "Encrypted": true
-    }
-  }]'
-```
+---
 
-**Hibernate a running instance:**
-```bash
-aws ec2 stop-instances \
-  --instance-ids i-1234567890abcdef0 \
-  --hibernate
-```
+### 🗺️ Visual Architecture: ENI IP Failover
 
-**Resume from hibernate (same as start-instances):**
-```bash
-aws ec2 start-instances --instance-ids i-1234567890abcdef0
+```mermaid
+sequenceDiagram
+    participant App as Client Application
+    participant Primary as EC2 (Primary)
+    participant ENI as ENI (IP: 10.0.1.15)
+    participant Standby as EC2 (Standby)
+
+    App->>ENI: Traffic to 10.0.1.15
+    ENI->>Primary: Routes to Primary
+    Note over Primary: Primary Instance Crashes
+    Standby->>ENI: API: Detach from Primary
+    Standby->>ENI: API: Attach to Standby
+    Note over ENI: Hot-swap completes
+    App->>ENI: Traffic to 10.0.1.15
+    ENI->>Standby: Routes to Standby
 ```
 
 ---
 
-## 🔍 EC2 Instance Metadata Service (IMDS)
-
-**What is IMDS?**
-It's a special HTTP endpoint (`169.254.169.254`) that every EC2 instance can call to learn about itself — its instance ID, public IP, IAM role credentials, security groups, AZ, etc.
-
-```
-Inside EC2:
-curl http://169.254.169.254/latest/meta-data/instance-id
-→ Returns: i-0123456789abcdef0
-
-curl http://169.254.169.254/latest/meta-data/iam/security-credentials/my-role
-→ Returns: temporary credentials (AccessKeyId, SecretAccessKey, Token)
-```
-
-**Why does this matter?** Your application code can fetch its own IAM credentials from IMDS without hardcoding them. AWS SDKs do this automatically.
-
-### IMDSv1 vs IMDSv2 — Security Matters
-
-| | IMDSv1 | IMDSv2 |
-|-|--------|--------|
-| How it works | Simple GET request | Session-oriented (PUT to get token first, then GET) |
-| SSRF vulnerability | Vulnerable | Protected |
-| Recommendation | Deprecated — avoid | **Use this** |
-
-**SSRF (Server-Side Request Forgery)**: An attacker tricks your app into making HTTP requests to `169.254.169.254` and stealing IAM credentials. IMDSv2 prevents this because it requires a session token.
-
-**Describe instance status (checks):**
-```bash
-aws ec2 describe-instance-status \
-  --instance-ids i-1234567890abcdef0
-```
-
-**Get console output (for debugging boot issues):**
-```bash
-aws ec2 get-console-output \
-  --instance-id i-1234567890abcdef0 \
-  --latest
-```
-
-**Reboot instance:**
-```bash
-aws ec2 reboot-instances --instance-ids i-1234567890abcdef0
-```
-
-> 🔗 IMDS docs: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** You have a legacy licensed software application running on an EC2 instance. The license is hardcoded to the server's MAC address. The underlying hardware degrades and you must replace the instance.
+  * **Design:** Detach the **ENI** from the failing instance and attach it to a newly launched replacement instance. The ENI retains the same MAC address and private IP, satisfying the legacy licensing requirement natively.
+* **Scenario:** A primary backend server crashes. You need a fast, cheap way to route internal VPC traffic to a standby server without using an internal Load Balancer or updating DNS records.
+  * **Design:** Script an automated **ENI Failover**. Have the standby server detach the ENI from the crashed primary and attach it to itself. Internal clients connecting to the static private IP experience minimal interruption.
 
 ---
 
-## ⭐ Interview Tips & Key Points to Remember
-
-- **Cluster = performance (same rack)** → low latency, high bandwidth, high failure risk
-- **Spread = availability (different racks)** → max **7 instances per AZ** (always remember this!)
-- **Partition = distributed scale** → rack-aware systems (HDFS, Cassandra, Kafka)
-- **ENI is AZ-bound** — can't cross AZs; commonly used for IP failover
-- **Hibernate requires encrypted EBS root volume** — must be enabled at launch
-- **Max hibernate: 150 GB RAM, 60 days** — know these numbers
-- **IMDS endpoint: 169.254.169.254** — link-local address, only accessible from within the instance
-- **IMDSv2 is more secure** — protects against SSRF attacks; prefer v2 over v1
-- **Moving an ENI moves its private IP, Elastic IP, and MAC address** — application sees no change
+### 📐 Application Design Patterns & Trade-offs
+* **ENI Failover vs. Internal Load Balancers:**
+  * **ENI Failover:** Very cheap (free), retains exact IP and MAC addresses. **Trade-off:** Failover takes a few seconds to process API calls, and is strictly limited to a single AZ.
+  * **Internal ALB/NLB:** Instant, seamless failover across multiple AZs. **Trade-off:** Incurs hourly running costs and data processing fees, and obscures the client IP (unless using NLB or X-Forwarded-For).
 
 ---
 
-## Quick Reference — AWS CLI Commands
+### 🚀 Real-World Production Insights
+* **The "Secondary ENI Asymmetric Routing" Bug:**
+  * **The Problem:** Engineers attach a secondary ENI (in a different subnet) to an EC2 instance so it can straddle two networks. However, Linux OS routing tables by default send all return traffic out the primary ENI (eth0). Traffic comes in on eth1 but leaves on eth0, causing stateful firewalls/security groups to drop the packets.
+  * **Mitigation:** You must implement Policy-Based Routing (PBR) inside the guest OS (e.g., using `iproute2` in Linux) to ensure that traffic arriving on the secondary ENI also departs via the secondary ENI.
 
-### Placement Groups
-```bash
-# Create a Cluster placement group
-aws ec2 create-placement-group --group-name my-cluster-pg --strategy cluster
+---
 
-# Create a Spread placement group
-aws ec2 create-placement-group --group-name my-spread-pg --strategy spread
+### 💻 Hands-on CLI Commands
+* **Hot-swap an ENI from a failed instance to a new one:**
+  ```bash
+  aws ec2 detach-network-interface \
+    --attachment-id eni-attach-0abc123def456
 
-# Create a Partition placement group
-aws ec2 create-placement-group --group-name my-partition-pg --strategy partition --partition-count 3
+  aws ec2 attach-network-interface \
+    --network-interface-id eni-0abc123def456 \
+    --instance-id i-NEW-INSTANCE-ID \
+    --device-index 1
+  ```
 
-# Launch instance into a placement group
-aws ec2 run-instances --image-id ami-0abcdef1234567890 --instance-type c5n.18xlarge --placement '{"GroupName": "my-cluster-pg"}' --count 1
+---
 
-# Describe placement groups
-aws ec2 describe-placement-groups
+## 😴 Topic 3: EC2 Hibernate & Instance Metadata Service (IMDS)
 
-# Delete placement group
-aws ec2 delete-placement-group --group-name my-cluster-pg
+### 📖 Technical Specifications & AWS Core Concepts
+* **EC2 Hibernate:** Pauses an instance and saves the contents of RAM to the EBS root volume. Upon resume, the RAM is reloaded, bypassing the OS boot sequence and application initialization time.
+* **Hibernate Constraints:** The root volume must be an encrypted EBS volume. Maximum 150 GB of RAM. Cannot hibernate longer than 60 days. Must be enabled at launch time.
+* **Instance Metadata Service (IMDS):** A local endpoint (`169.254.169.254`) accessible only from within the EC2 instance to retrieve metadata (instance ID, AZ) and IAM role credentials dynamically.
+* **IMDSv2:** The modern, secure version of the metadata service that requires a session token to protect against Server-Side Request Forgery (SSRF) attacks.
+
+---
+
+### 🗺️ Visual Architecture: EC2 Hibernation Process
+
+```mermaid
+stateDiagram-v2
+    [*] --> Running
+    Running --> Stopping : Trigger Hibernate
+    note right of Stopping
+        RAM contents dumped to
+        Encrypted EBS Root Volume
+    end note
+    Stopping --> Stopped
+    Stopped --> Pending : Trigger Start
+    note right of Pending
+        RAM contents restored
+        from EBS to memory
+    end note
+    Pending --> Running : Fast Resume
 ```
 
-### Elastic Network Interfaces
-```bash
-# Create an ENI
-aws ec2 create-network-interface --subnet-id subnet-0abc123def456 --description "Secondary ENI" --groups sg-0abc123def456
+---
 
-# Attach ENI to instance
-aws ec2 attach-network-interface --network-interface-id eni-0abc123def456 --instance-id i-1234567890abcdef0 --device-index 1
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** You have a fleet of machine learning worker nodes. Loading the multi-gigabyte inference model into memory takes 15 minutes during boot, rendering Auto Scaling ineffective for sudden traffic spikes.
+  * **Design:** Use **EC2 Hibernate**. Pre-warm the instances by loading the ML models into RAM, then hibernate them. When the Auto Scaling Group scales out, the instances resume with the models already in RAM, reducing launch time from 15 minutes to seconds.
+* **Scenario:** Your security team alerts you that a vulnerability in your web application could allow an attacker to make internal HTTP requests (SSRF), potentially exposing the temporary IAM credentials of the EC2 instance.
+  * **Design:** Enforce **IMDSv2** on all EC2 instances. IMDSv2 requires the attacker to execute a `PUT` request to generate a session token before fetching metadata, which natively blocks almost all standard SSRF attack vectors.
 
-# Detach ENI
-aws ec2 detach-network-interface --attachment-id eni-attach-0abc123def456
+---
 
-# Describe ENIs
-aws ec2 describe-network-interfaces --filters "Name=subnet-id,Values=subnet-0abc123def456"
-```
+### 📐 Application Design Patterns & Trade-offs
+* **Hibernation vs. Golden AMIs:**
+  * **Golden AMIs:** Bakes software and dependencies into the disk image. **Trade-off:** Fast OS boot, but the application must still initialize and load data into RAM upon startup.
+  * **Hibernation:** Saves the exact running state of RAM. **Trade-off:** Instant resume, but incurs EBS storage costs for the RAM dump file, and instances cannot be hibernated indefinitely (60-day limit).
 
-### EC2 Hibernation
-```bash
-# Launch instance with hibernation
-aws ec2 run-instances --image-id ami-0abcdef1234567890 --instance-type m5.large --hibernation-options Configured=true
+---
 
-# Hibernation stop
-aws ec2 stop-instances --instance-ids i-1234567890abcdef0 --hibernate
+### 🚀 Real-World Production Insights
+* **The Hibernate "Out of Space" Kernel Panic:**
+  * **The Problem:** Engineers enable hibernation but size the EBS root volume exactly to the application's disk needs. When hibernation triggers, EC2 attempts to dump 32GB of RAM onto the root volume. If the volume lacks 32GB of free space, the hibernation fails, and the instance may crash or remain in a stuck state.
+  * **Mitigation:** When sizing an EBS root volume for a hibernating instance, you must allocate `OS size + Application size + Total Instance RAM size`. Always overestimate the root volume size.
 
-# Resume from hibernation
-aws ec2 start-instances --instance-ids i-1234567890abcdef0
-```
+---
 
-### EC2 Instance Status & Metadata
-```bash
-# Describe instance status
-aws ec2 describe-instance-status --instance-ids i-1234567890abcdef0
-
-# Get console output
-aws ec2 get-console-output --instance-id i-1234567890abcdef0 --latest
-
-# Reboot instance
-aws ec2 reboot-instances --instance-ids i-1234567890abcdef0
-```
+### 💻 Hands-on CLI Commands
+* **Fetch IAM role credentials using the secure IMDSv2:**
+  ```bash
+  # 1. Get a session token (valid for 21600 seconds)
+  TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+  
+  # 2. Use the token to fetch IAM credentials
+  curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/iam/security-credentials/MyRoleName
+  ```

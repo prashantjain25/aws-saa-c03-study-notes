@@ -1,97 +1,103 @@
-# Amazon S3 – Advanced & Security
+# Amazon S3 – Advanced Security & Encryption
 
-## S3 Security Overview
+## S3 Access Control & Bucket Security
 
-### Bucket Policies (Resource-based)
-- JSON-based policies attached to bucket
-- Can grant cross-account access
-- Can allow/deny public access
-- Use case: grant public access, force HTTPS, cross-account access
+### 📖 Technical Specifications & AWS Core Concepts
+- **Bucket Policies (Resource-based)**: JSON policies attached directly to the bucket. Can grant cross-account access, enforce HTTPS, and manage broad public access rules.
+- **Access Control Lists (ACLs)**: Legacy mechanism for object or bucket-level access. AWS recommends disabling ACLs entirely in favor of Object Ownership settings and Bucket Policies.
+- **Block Public Access (BPA)**: An account-level or bucket-level guardrail. Overrides any bucket policies or ACLs that attempt to grant public access. Should be ON by default unless explicitly hosting public content.
+- **MFA Delete**: Protects against accidental deletion. Requires multi-factor authentication from the bucket owner (root account) to permanently delete an object version or suspend versioning.
 
-### ACLs (Access Control Lists)
-- Object-level or Bucket-level ACL
-- Less common now; bucket policies preferred
-- Can be disabled at bucket/account level
-
-### Block Public Access Settings
-- Account-level or bucket-level setting
-- Created to prevent company data leaks
-- If enabled, overrides bucket policies that grant public access
-- Should be ON unless bucket needs to be public
-
-## S3 Object Encryption
-
-### Server-Side Encryption (SSE)
-| Type | Key Managed By | Description |
-|------|---------------|-------------|
-| SSE-S3 | AWS | AWS-managed keys, AES-256, default encryption |
-| SSE-KMS | AWS KMS | KMS Customer Managed Keys, audit with CloudTrail |
-| SSE-C | Customer | Customer provides key in HTTP header, HTTPS only |
-| DSSE-KMS | AWS KMS | Double-layer encryption (two separate KMS keys) |
-
-- **SSE-S3**: default since Jan 2023 for new objects. Header: "x-amz-server-side-encryption": "AES256"
-- **SSE-KMS**: more control + audit. Header: "x-amz-server-side-encryption": "aws:kms". Has KMS API quota limits.
-- **SSE-C**: HTTPS required, key not stored by AWS, key must be in header every request
-- **Client-Side Encryption**: client encrypts data before sending to S3
-
-**Put object with SSE-S3:**
-```bash
-aws s3api put-object \
-  --bucket my-bucket \
-  --key sensitive-file.txt \
-  --body sensitive-file.txt \
-  --server-side-encryption AES256
+### 🗺️ Visual Architecture: Access Control Flow
+```mermaid
+flowchart TD
+    User([User / Application]) --> BPA{Block Public Access}
+    BPA -- Blocked --> Deny[403 Access Denied]
+    BPA -- Allowed --> Policy{Bucket Policy}
+    Policy -- Explicit Deny --> Deny
+    Policy -- Allow --> ACL{Object ACL}
+    ACL -- Deny --> Deny
+    ACL -- Allow --> Object[(S3 Object)]
 ```
 
-**Put object with SSE-KMS:**
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** You need to ensure no one, even a privileged admin, can accidentally make a bucket public.
+  * **Design:** Deploy Account-level Block Public Access. Because it serves as a strict guardrail that overrides all bucket policies and ACLs globally.
+* **Scenario:** You need to prevent compromised IAM users from deleting historical object versions.
+  * **Design:** Deploy MFA Delete. Because it requires a hardware or virtual MFA token from the root account to permanently delete an object version.
+
+### 📐 Application Design Patterns & Trade-offs
+- **Pattern:** Centralize access control using Bucket Policies while setting "Object Ownership" to "Bucket Owner Enforced" to completely disable ACLs.
+- **Trade-off:** Bucket Policies provide a unified, easily auditable access model but have a 20KB size limit. For environments with hundreds of complex rules, you must transition to S3 Access Points.
+
+### 🚀 Real-World Production Insights
+- **Battle Scares:** Applying an overly broad `Deny *` bucket policy without specific conditions can lock even root administrators out of the bucket. Always test policies carefully, and ensure you include conditions to bypass the deny for emergency administrative roles.
+
+### 💻 Hands-on CLI Commands
 ```bash
+# Enable MFA Delete (requires root credentials + MFA code)
+aws s3api put-bucket-versioning \
+  --bucket my-bucket \
+  --versioning-configuration Status=Enabled,MFADelete=Enabled \
+  --mfa "arn:aws:iam::123456789012:mfa/root-account-mfa-device 123456"
+
+# Enable server access logging
+aws s3api put-bucket-logging \
+  --bucket my-bucket \
+  --bucket-logging-status '{
+    "LoggingEnabled": {
+      "TargetBucket": "my-access-logs-bucket",
+      "TargetPrefix": "my-bucket-logs/"
+    }
+  }'
+```
+
+## S3 Data Encryption (At-Rest & In-Transit)
+
+### 📖 Technical Specifications & AWS Core Concepts
+- **SSE-S3**: Default encryption (AES-256) managed fully by AWS. No extra cost.
+- **SSE-KMS**: AWS KMS-managed keys. Provides explicit control and auditing via CloudTrail.
+- **SSE-C**: Customer-managed keys. Customer provides the key in HTTP headers; AWS encrypts/decrypts in memory and discards the key immediately. Requires HTTPS.
+- **DSSE-KMS**: Double-layer server-side encryption for stringent compliance requirements.
+- **Encryption in Transit (SSL/TLS)**: S3 provides HTTP and HTTPS endpoints. Best practice is to deny HTTP traffic entirely using a bucket policy `aws:SecureTransport` condition.
+
+### 🗺️ Visual Architecture: S3 Encryption Patterns
+```mermaid
+flowchart LR
+    Client([Client]) -- TLS (In-Transit) --> API[S3 API Endpoint]
+    API -- SSE-S3 --> KeyS3[AWS Managed AES-256]
+    API -- SSE-KMS --> KeyKMS[AWS KMS Service]
+    API -- SSE-C --> KeyCust[Customer Header Key]
+    
+    KeyS3 -.-> Storage[(Encrypted Disk)]
+    KeyKMS -.-> Storage
+    KeyCust -.-> Storage
+```
+
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** You need strict audit trails showing exactly who decrypted which file and when.
+  * **Design:** Deploy SSE-KMS. Because AWS KMS inherently logs every cryptographic operation (key usage) to CloudTrail.
+* **Scenario:** Corporate policy strictly mandates that AWS must never persistently store encryption keys.
+  * **Design:** Deploy SSE-C. Because the customer manages the key, provides it per request, and AWS discards it from memory immediately after use.
+
+### 📐 Application Design Patterns & Trade-offs
+- **Pattern:** Enforcing encryption in transit at the bucket level using `aws:SecureTransport: false` Deny rules.
+- **Trade-off:** SSE-KMS provides superior security and auditing but introduces KMS API quota limits and costs per request. SSE-S3 is free and unlimited but lacks granular key usage auditing.
+
+### 🚀 Real-World Production Insights
+- **Battle Scares:** Heavy parallel processing workloads (e.g., EMR, Athena, or Lambda arrays) hitting S3 buckets encrypted with SSE-KMS often cause KMS `ThrottlingException` due to API rate limits. Mitigate this by utilizing S3 Bucket Keys to decrease KMS request traffic by up to 99%.
+
+### 💻 Hands-on CLI Commands
+```bash
+# Put object with SSE-KMS
 aws s3api put-object \
   --bucket my-bucket \
   --key sensitive-file.txt \
   --body sensitive-file.txt \
   --server-side-encryption aws:kms \
   --ssekms-key-id arn:aws:kms:us-east-1:123456789012:key/mrk-abc123
-```
 
-**Put object with SSE-C (customer-managed key in request headers):**
-```bash
-aws s3api put-object \
-  --bucket my-bucket \
-  --key secure-file.txt \
-  --body secure-file.txt \
-  --sse-customer-algorithm AES256 \
-  --sse-customer-key "$(echo -n 'my-32-byte-base64-encoded-key==' | base64)" \
-  --sse-customer-key-md5 "$(echo -n 'my-32-byte-base64-encoded-key==' | md5sum | awk '{print $1}' | xxd -r -p | base64)"
-```
-
-**Set default bucket encryption (SSE-S3):**
-```bash
-aws s3api put-bucket-encryption \
-  --bucket my-bucket \
-  --server-side-encryption-configuration '{
-    "Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]
-  }'
-```
-
-**Set default bucket encryption (SSE-KMS):**
-```bash
-aws s3api put-bucket-encryption \
-  --bucket my-bucket \
-  --server-side-encryption-configuration '{
-    "Rules": [{"ApplyServerSideEncryptionByDefault": {
-      "SSEAlgorithm": "aws:kms",
-      "KMSMasterKeyID": "arn:aws:kms:us-east-1:123456789012:key/mrk-abc123"
-    }}]
-  }'
-```
-
-### Encryption in Transit (SSL/TLS)
-- HTTP endpoint: not encrypted
-- HTTPS endpoint: encrypted in transit
-- Enforce HTTPS via bucket policy: deny HTTP requests (aws:SecureTransport condition)
-
-**Force HTTPS-only bucket policy (deny HTTP):**
-```bash
+# Force HTTPS-only via bucket policy (Deny HTTP)
 aws s3api put-bucket-policy \
   --bucket my-bucket \
   --policy '{
@@ -105,14 +111,105 @@ aws s3api put-bucket-policy \
   }'
 ```
 
-## S3 CORS (Cross-Origin Resource Sharing)
-- Cross-origin = different scheme, host, or port
-- Browser makes preflight request with Origin header
-- S3 bucket must have CORS configuration to allow requests from specific origins
-- Use case: static website on S3 accessing another S3 bucket
+## S3 Data Immutability (Object Lock & Glacier Vault Lock)
 
-**Set CORS configuration:**
+### 📖 Technical Specifications & AWS Core Concepts
+- **WORM Model**: Write Once, Read Many. Prevents deletion or modification of data.
+- **Glacier Vault Lock**: Implements WORM at the Glacier Vault level by locking a vault policy for future edits.
+- **S3 Object Lock (Compliance Mode)**: No user (including the root user) can delete or overwrite the object until the retention period expires.
+- **S3 Object Lock (Governance Mode)**: Most users cannot delete the object, but authorized users with special IAM permissions (`s3:BypassGovernanceRetention`) can alter or delete it.
+- **Legal Hold**: Protects an object indefinitely. Independent of retention periods and can be toggled by authorized users.
+
+### 🗺️ Visual Architecture: Object Lock Retention Modes
+```mermaid
+flowchart TD
+    Req[Delete Request] --> Mode{Object Lock Mode}
+    Mode -- Legal Hold --> Blocked[403 Access Denied]
+    Mode -- Compliance --> Time{Retention Expired?}
+    Time -- No --> Blocked
+    Time -- Yes --> Allowed[Delete Success]
+    Mode -- Governance --> Priv{Has Bypass Permission?}
+    Priv -- No --> Time
+    Priv -- Yes --> Allowed
+```
+
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** Financial regulations (like SEC Rule 17a-4) require logs to be immutable for 7 years; no admin override is legally permitted.
+  * **Design:** Deploy Object Lock in Compliance Mode. Because it guarantees mathematical immutability where even the AWS account root user cannot bypass the retention period.
+* **Scenario:** You want to protect backups against ransomware, but need the ability for the Chief Security Officer to delete data in emergencies.
+  * **Design:** Deploy Object Lock in Governance Mode. Because standard users are blocked, but users granted specific bypass permissions can alter the objects.
+
+### 📐 Application Design Patterns & Trade-offs
+- **Pattern:** Using Legal Holds for e-discovery during active litigation, ensuring files remain untouched until the legal hold is manually removed.
+- **Trade-off:** Compliance mode guarantees absolute immutability, meaning you are financially liable to pay for the storage until expiration, with zero possibility of early deletion. Also, Object Lock must be enabled during bucket creation.
+
+### 🚀 Real-World Production Insights
+- **Battle Scares:** Enabling Compliance mode on an active development or testing bucket can result in massive, unavoidable storage bills. Developers might write terabytes of test data that physically cannot be deleted until the retention period expires. Always validate lifecycle policies in Governance mode first.
+
+### 💻 Hands-on CLI Commands
 ```bash
+# Create bucket with Object Lock enabled (Required at creation)
+aws s3api create-bucket \
+  --bucket my-locked-bucket \
+  --object-lock-enabled-for-bucket
+
+# Put object with Compliance retention (e.g., 30 days)
+aws s3api put-object-retention \
+  --bucket my-locked-bucket \
+  --key important-doc.pdf \
+  --retention '{"Mode": "COMPLIANCE", "RetainUntilDate": "2026-12-31T00:00:00Z"}'
+
+# Toggle a legal hold on an object
+aws s3api put-object-legal-hold \
+  --bucket my-locked-bucket \
+  --key important-doc.pdf \
+  --legal-hold Status=ON
+```
+
+## S3 Advanced Data Sharing (Pre-Signed URLs, Access Points, CORS)
+
+### 📖 Technical Specifications & AWS Core Concepts
+- **Pre-Signed URLs**: Cryptographically signed URLs that grant time-limited access (GET/PUT) to specific S3 objects without requiring AWS credentials from the requester. Inherits the permissions of the URL creator.
+- **S3 Access Points**: Dedicated network endpoints attached to an S3 bucket. Each has a unique DNS name and a distinct IAM policy. Can be restricted to a specific VPC.
+- **CORS (Cross-Origin Resource Sharing)**: Configuration that defines which external domains (origins) are allowed to make requests directly to the S3 bucket via web browsers.
+- **S3 Object Lambda**: Intercepts `GET` requests to modify data on the fly (e.g., redacting PII, resizing images) using Lambda functions before returning it to the client.
+
+### 🗺️ Visual Architecture: S3 Access Points
+```mermaid
+flowchart LR
+    App1[Finance App] --> AP1[Finance Access Point]
+    App2[HR App] --> AP2[HR Access Point]
+    AP1 -- Finance Policy --> S3[(Central S3 Bucket)]
+    AP2 -- HR Policy --> S3
+    S3 -- Object Lambda --> Lambda[Data Redaction] --> App2
+```
+
+### 🧠 Architectural Probing & Decision Scenarios
+* **Scenario:** Allow premium mobile users to upload a 5GB video directly to S3 within a 15-minute window without passing through your application servers.
+  * **Design:** Deploy S3 Pre-Signed URLs for PUT operations. Because it delegates your backend's IAM permissions for a restricted time window, offloading bandwidth directly to AWS.
+* **Scenario:** You have a massive data lake bucket shared across 50 different microservices, and managing a single bucket policy has become impossible.
+  * **Design:** Deploy S3 Access Points. Because it decentralizes policy management, allowing each microservice to have a distinct DNS endpoint and separate IAM policy scoped to their specific prefix.
+
+### 📐 Application Design Patterns & Trade-offs
+- **Pattern:** Using S3 Object Lambda to serve multiple formats (e.g., watermarked images, redacted CSVs) from a single source object.
+- **Trade-off:** Pre-signed URLs are simple to generate natively in client SDKs but are incredibly difficult to revoke early (they remain valid until the expiration time or until the generating credentials are rotated). Access Points scale well but increase infrastructure complexity.
+
+### 🚀 Real-World Production Insights
+- **Battle Scares:** Pre-signed URLs generated using temporary IAM role credentials (like those from EC2 instance profiles or Lambda roles) are bounded by the session duration. If an EC2 role expires in 1 hour, a pre-signed URL configured with a 7-day `--expires-in` limit will stop working after 1 hour anyway.
+
+### 💻 Hands-on CLI Commands
+```bash
+# Generate a pre-signed URL for GET (valid for 1 hour)
+aws s3 presign s3://my-bucket/private-video.mp4 --expires-in 3600
+
+# Create a VPC-restricted S3 Access Point
+aws s3control create-access-point \
+  --account-id 123456789012 \
+  --name finance-access-point \
+  --bucket my-bucket \
+  --vpc-configuration VpcId=vpc-1234567890abcdef0
+
+# Set CORS configuration allowing GET requests from example.com
 aws s3api put-bucket-cors \
   --bucket my-bucket \
   --cors-configuration '{
@@ -123,214 +220,4 @@ aws s3api put-bucket-cors \
       "MaxAgeSeconds": 3000
     }]
   }'
-```
-
-**Get CORS configuration:**
-```bash
-aws s3api get-bucket-cors --bucket my-bucket
-```
-
-## S3 MFA Delete
-- Requires MFA to: permanently delete a version, suspend versioning
-- Does NOT require MFA to: enable versioning, list deleted versions
-- Only bucket OWNER (root account) can enable/disable MFA Delete
-- Versioning must be enabled first
-
-**Enable MFA Delete (requires root credentials + MFA code):**
-```bash
-aws s3api put-bucket-versioning \
-  --bucket my-bucket \
-  --versioning-configuration Status=Enabled,MFADelete=Enabled \
-  --mfa "arn:aws:iam::123456789012:mfa/root-account-mfa-device 123456"
-```
-
-## S3 Access Logs
-- Log all requests to S3 bucket to another S3 bucket (in same region)
-- Never set logging bucket = monitored bucket (creates infinite logging loop!)
-- Used for audit purposes
-
-**Enable server access logging:**
-```bash
-aws s3api put-bucket-logging \
-  --bucket my-bucket \
-  --bucket-logging-status '{
-    "LoggingEnabled": {
-      "TargetBucket": "my-access-logs-bucket",
-      "TargetPrefix": "my-bucket-logs/"
-    }
-  }'
-```
-
-## S3 Pre-Signed URLs
-- Generate URL with time-limited access (using SDK or CLI)
-- URL inherits permissions of the user who generated it
-- Expiration: 3600s default (up to 604800s = 7 days for S3 console/CLI)
-- Use case: allow premium users to download video, temporary file upload access
-
-**Generate a pre-signed URL (GET — valid for 1 hour):**
-```bash
-aws s3 presign s3://my-bucket/private-video.mp4 --expires-in 3600
-```
-
-**Generate a pre-signed URL for PUT (allow upload for 5 minutes):**
-```bash
-aws s3 presign s3://my-bucket/uploads/document.pdf \
-  --expires-in 300
-```
-
-## S3 Glacier Vault Lock & S3 Object Lock
-- **Glacier Vault Lock**: adopt WORM model (Write Once Read Many), lock the policy for future edits, compliance/data retention
-- **S3 Object Lock** (versioning must be enabled):
-  - **Retention Mode – Compliance**: no user (including root) can overwrite/delete for retention period
-  - **Retention Mode – Governance**: most users can't delete, some with special permissions can
-  - **Legal Hold**: protect object indefinitely, independent of retention period
-
-**Create bucket with Object Lock enabled (must be done at creation):**
-```bash
-aws s3api create-bucket \
-  --bucket my-locked-bucket \
-  --object-lock-enabled-for-bucket
-```
-
-**Put object with Compliance retention (30 days):**
-```bash
-aws s3api put-object-retention \
-  --bucket my-locked-bucket \
-  --key important-doc.pdf \
-  --retention '{"Mode": "COMPLIANCE", "RetainUntilDate": "2026-12-31T00:00:00Z"}'
-```
-
-**Put legal hold on an object:**
-```bash
-aws s3api put-object-legal-hold \
-  --bucket my-locked-bucket \
-  --key important-doc.pdf \
-  --legal-hold Status=ON
-```
-
-**Remove legal hold:**
-```bash
-aws s3api put-object-legal-hold \
-  --bucket my-locked-bucket \
-  --key important-doc.pdf \
-  --legal-hold Status=OFF
-```
-
-## S3 Access Points
-- Simplify security management for large S3 buckets
-- Each access point has its own DNS name + access point policy
-- Can be internet-facing or VPC-restricted
-- Use case: separate access points for different teams (finance, HR, analytics)
-
-**Create an S3 Access Point:**
-```bash
-aws s3control create-access-point \
-  --account-id 123456789012 \
-  --name finance-access-point \
-  --bucket my-bucket \
-  --vpc-configuration VpcId=vpc-1234567890abcdef0
-```
-
-**List access points:**
-```bash
-aws s3control list-access-points \
-  --account-id 123456789012 \
-  --bucket my-bucket
-```
-
-## S3 Object Lambda
-- Use Lambda functions to modify objects before they're retrieved
-- No need for multiple copies of data
-- Use case: redact PII, convert data formats, resize images on-the-fly
-
-## S3 Presigned URLs vs Access Points
-- Presigned URLs = time-limited direct access to an object
-- Access Points = simplified, scalable access management with separate policies
-
-## ⭐ Interview Tips & Key Points to Remember
-- **SSE-S3 is now the DEFAULT encryption** for new objects (since Jan 2023)
-- **SSE-KMS has rate limits** (KMS API calls) — can become a bottleneck at high request rates
-- **SSE-C requires HTTPS** and key in every request header — AWS never stores the key
-- **Block Public Access is account-level** — OVERRIDES any bucket policy granting public access
-- **CORS is browser-side protection** — S3 CORS config tells browsers which origins are allowed
-- **MFA Delete requires root account** — cannot be enabled by IAM users
-- **S3 Object Lock Compliance mode**: even root cannot delete — strongest protection
-- **Object Lock Legal Hold**: no expiry date, can be set/removed by users with s3:PutObjectLegalHold
-- **Pre-Signed URL**: common pattern for giving temporary access to private objects
-- **Never log to the same bucket you're monitoring** — causes infinite loop
-- **S3 Access Points**: each team gets their own entry point with scoped policies
-- **Glacier Vault Lock**: for regulatory compliance (WORM) — once locked, policy can't be changed
-- **Bucket policy vs ACL**: bucket policies are preferred; ACLs can be disabled (object ownership settings)
-
----
-
-## Quick Reference — AWS CLI Commands
-
-### S3 Encryption
-```bash
-# Put object with SSE-S3
-aws s3api put-object --bucket my-bucket --key sensitive-file.txt --body sensitive-file.txt --server-side-encryption AES256
-
-# Put object with SSE-KMS
-aws s3api put-object --bucket my-bucket --key sensitive-file.txt --body sensitive-file.txt --server-side-encryption aws:kms --ssekms-key-id arn:aws:kms:us-east-1:123456789012:key/mrk-abc123
-
-# Set default bucket encryption (SSE-S3)
-aws s3api put-bucket-encryption --bucket my-bucket --server-side-encryption-configuration '{"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}'
-
-# Set default bucket encryption (SSE-KMS)
-aws s3api put-bucket-encryption --bucket my-bucket --server-side-encryption-configuration '{"Rules": [{"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "aws:kms", "KMSMasterKeyID": "arn:aws:kms:us-east-1:123456789012:key/mrk-abc123"}}]}'
-
-# Force HTTPS-only
-aws s3api put-bucket-policy --bucket my-bucket --policy '{"Statement": [{"Effect": "Deny", "Principal": "*", "Action": "s3:*", "Resource": ["arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket/*"], "Condition": {"Bool": {"aws:SecureTransport": "false"}}}]}'
-```
-
-### CORS Configuration
-```bash
-# Set CORS configuration
-aws s3api put-bucket-cors --bucket my-bucket --cors-configuration '{"CORSRules": [{"AllowedOrigins": ["https://www.example.com"], "AllowedMethods": ["GET", "HEAD"], "AllowedHeaders": ["*"], "MaxAgeSeconds": 3000}]}'
-
-# Get CORS configuration
-aws s3api get-bucket-cors --bucket my-bucket
-```
-
-### MFA Delete & Access Logs
-```bash
-# Enable MFA Delete
-aws s3api put-bucket-versioning --bucket my-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa "arn:aws:iam::123456789012:mfa/root-account-mfa-device 123456"
-
-# Enable server access logging
-aws s3api put-bucket-logging --bucket my-bucket --bucket-logging-status '{"LoggingEnabled": {"TargetBucket": "my-access-logs-bucket", "TargetPrefix": "my-bucket-logs/"}}'
-```
-
-### Pre-Signed URLs
-```bash
-# Generate presigned URL (GET, 1 hour)
-aws s3 presign s3://my-bucket/private-video.mp4 --expires-in 3600
-
-# Generate presigned URL (PUT, 5 minutes)
-aws s3 presign s3://my-bucket/uploads/document.pdf --expires-in 300
-```
-
-### S3 Object Lock
-```bash
-# Create bucket with Object Lock
-aws s3api create-bucket --bucket my-locked-bucket --object-lock-enabled-for-bucket
-
-# Put object with Compliance retention
-aws s3api put-object-retention --bucket my-locked-bucket --key important-doc.pdf --retention '{"Mode": "COMPLIANCE", "RetainUntilDate": "2026-12-31T00:00:00Z"}'
-
-# Put legal hold on object
-aws s3api put-object-legal-hold --bucket my-locked-bucket --key important-doc.pdf --legal-hold Status=ON
-
-# Remove legal hold
-aws s3api put-object-legal-hold --bucket my-locked-bucket --key important-doc.pdf --legal-hold Status=OFF
-```
-
-### S3 Access Points
-```bash
-# Create access point
-aws s3control create-access-point --account-id 123456789012 --name finance-access-point --bucket my-bucket --vpc-configuration VpcId=vpc-1234567890abcdef0
-
-# List access points
-aws s3control list-access-points --account-id 123456789012 --bucket my-bucket
 ```
